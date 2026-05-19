@@ -41,9 +41,7 @@ const LoginPage = () => {
     e.preventDefault();
 
     if (!email || !password) {
-      toast.error("Tüm alanların doldurulması zorunludur !", {
-        style: { border: "2px solid", padding: "16px" },
-      });
+      toast.error("Tüm alanların doldurulması zorunludur !");
       return;
     }
 
@@ -56,15 +54,11 @@ const LoginPage = () => {
         login(data.user);
         forwardTo("Ana sayfa", "/main");
       } else {
-        toast.error(data.message || "Giriş yapılamadı!", {
-          style: { border: "2px solid", padding: "16px" },
-        });
+        toast.error(data.message || "Giriş yapılamadı!");
       }
     } catch (error: unknown) {
       console.error("Login Error:", error);
-      toast.error(getErrorMessage(error, "Sunucuya bağlanılamadı!"), {
-        style: { border: "2px solid", padding: "16px" },
-      });
+      toast.error(getErrorMessage(error, "Sunucuya bağlanılamadı!"));
     } finally {
       setSubmitting(false);
     }
@@ -76,9 +70,7 @@ const LoginPage = () => {
     e.preventDefault();
 
     if (!firstName || !lastName || !email || !password) {
-      toast.error("Tüm alanların doldurulması zorunludur !", {
-        style: { border: "2px solid", padding: "16px" },
-      });
+      toast.error("Tüm alanların doldurulması zorunludur !");
       return;
     }
 
@@ -95,17 +87,13 @@ const LoginPage = () => {
       if (data.success) {
         setSetupOpen(false);
         login(data.user);
-        toast.success("İlk admin hesabı oluşturuldu.", {
-          style: { border: "2px solid", padding: "16px" },
-        });
+        toast.success("İlk admin hesabı oluşturuldu.");
         forwardTo("Ana sayfa", "/main");
       }
     } catch (error: unknown) {
       console.error("First Admin Register Error:", error);
       setSetupOpen(false);
-      toast.error(getErrorMessage(error, "İlk kurulum tamamlanamadı!"), {
-        style: { border: "2px solid", padding: "16px" },
-      });
+      toast.error(getErrorMessage(error, "İlk kurulum tamamlanamadı!"));
     } finally {
       setSubmitting(false);
     }
@@ -138,6 +126,7 @@ const LoginPage = () => {
                   <input
                     type="text"
                     name="firstName"
+                    id="admin-firstName"
                     value={firstName}
                     onChange={(e) => setFirstName(e.target.value)}
                     placeholder="Ad"
@@ -150,6 +139,7 @@ const LoginPage = () => {
                   <input
                     type="text"
                     name="lastName"
+                    id="admin-lastName"
                     value={lastName}
                     onChange={(e) => setLastName(e.target.value)}
                     placeholder="Soyad"
@@ -163,6 +153,7 @@ const LoginPage = () => {
                 <input
                   type="email"
                   name="email"
+                  id="admin-email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="E-posta"
@@ -179,6 +170,7 @@ const LoginPage = () => {
                 <input
                   type="password"
                   name="password"
+                  id="admin-password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Şifre"
@@ -187,6 +179,7 @@ const LoginPage = () => {
               </div>
 
               <button
+                id="admin-button"
                 className="flex items-center justify-center gap-2 rounded-lg border-2 border-gray-900 bg-gray-800 p-3 text-lg text-white transition hover:bg-gray-700 disabled:cursor-not-allowed disabled:bg-gray-500"
                 disabled={isSubmitting}
               >
@@ -209,6 +202,7 @@ const LoginPage = () => {
                 <input
                   type="email"
                   name="email"
+                  id="login-email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="E-posta"
@@ -225,6 +219,7 @@ const LoginPage = () => {
                 <input
                   type="password"
                   name="password"
+                  id="login-password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Şifre"
@@ -236,6 +231,7 @@ const LoginPage = () => {
                 <input
                   type="checkbox"
                   name="rememberMe"
+                  id="login-remember"
                   checked={isRememberMe}
                   onChange={(e) => setRemember(e.target.checked)}
                   className="h-5 w-5"
@@ -246,12 +242,11 @@ const LoginPage = () => {
               </div>
 
               <button
+                id="login-button"
                 className="flex items-center justify-center gap-2 rounded-lg border-2 border-gray-900 bg-gray-800 p-3 text-lg text-white transition hover:bg-gray-700 disabled:cursor-not-allowed disabled:bg-gray-500"
                 disabled={isSubmitting}
               >
-                {isSubmitting && (
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                )}
+                {isSubmitting && <Loader2 className="h-5 w-5 animate-spin" />}
                 Giriş Yap
               </button>
             </form>

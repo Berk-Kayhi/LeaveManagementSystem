@@ -109,12 +109,14 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
           </div>
           <div className="flex items-center gap-1.5">
             <button
+              id="date-picker-prev-month"
               onClick={() => setViewDate(viewDate.minus({ months: 1 }))}
               className="p-1 hover:bg-gray-100 rounded-lg transition-colors text-gray-400"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
             <button
+              id="date-picker-next-month"
               onClick={() => setViewDate(viewDate.plus({ months: 1 }))}
               className="p-1 hover:bg-gray-100 rounded-lg transition-colors text-gray-400"
             >
@@ -150,6 +152,7 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
               <div key={dateISO} className="relative z-10 py-1">
                 {renderContinuousRange(dateISO, index)}
                 <button
+                  id={`date-day-${dateISO}`}
                   onClick={() => !isPast && handleDateClick(dateISO)}
                   disabled={isPast}
                   className={`relative w-9 h-9 mx-auto flex items-center justify-center text-[12px] font-bold rounded-full transition-all duration-200 z-10

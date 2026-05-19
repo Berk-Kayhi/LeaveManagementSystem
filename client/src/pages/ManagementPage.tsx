@@ -176,7 +176,7 @@ const ManagementPage = () => {
   );
 
   const handleCreateUser = async () => {
-    if (!userForm.firstName || !userForm.lastName || !userForm.email) {
+    if (!userForm.firstName || !userForm.lastName || !userForm.email || !userForm.password) {
       toast.error("Kullanıcı bilgilerini eksiksiz doldurun.");
       return;
     }
@@ -331,6 +331,7 @@ const ManagementPage = () => {
                   </p>
                 </div>
                 <button
+                  id="cancel-delete-user-button"
                   type="button"
                   onClick={() => setUserDeleteConfirmOpen(false)}
                   className="mt-2 flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gray-100 text-gray-600 hover:bg-gray-200 border-2 border-gray-200 text-sm font-semibold transition-all duration-200 cursor-pointer"
@@ -359,6 +360,7 @@ const ManagementPage = () => {
                 </div>
                 <div className="flex items-center gap-3 mt-2">
                   <button
+                    id="cancel-delete-user-button"
                     type="button"
                     onClick={() => setUserDeleteConfirmOpen(false)}
                     disabled={removingUser}
@@ -368,6 +370,7 @@ const ManagementPage = () => {
                     Geri Dön
                   </button>
                   <button
+                    id="confirm-delete-user-button"
                     type="button"
                     onClick={handleDeleteSelectedUserAccount}
                     disabled={removingUser}
@@ -396,20 +399,22 @@ const ManagementPage = () => {
       >
         <div className="flex flex-col gap-3">
           <div className="grid grid-cols-2 gap-3">
-            <input className={inputClass} placeholder="Ad" value={userForm.firstName} onChange={(event) => setUserForm({ ...userForm, firstName: event.target.value })} />
-            <input className={inputClass} placeholder="Soyad" value={userForm.lastName} onChange={(event) => setUserForm({ ...userForm, lastName: event.target.value })} />
+            <input id="user-firstName" className={inputClass} placeholder="Ad" value={userForm.firstName} onChange={(event) => setUserForm({ ...userForm, firstName: event.target.value })} />
+            <input id="user-lastName" className={inputClass} placeholder="Soyad" value={userForm.lastName} onChange={(event) => setUserForm({ ...userForm, lastName: event.target.value })} />
           </div>
-          <input className={inputClass} placeholder="E-posta" type="email" value={userForm.email} onChange={(event) => setUserForm({ ...userForm, email: event.target.value })} />
+          <input id="user-email" className={inputClass} placeholder="E-posta" type="email" value={userForm.email} onChange={(event) => setUserForm({ ...userForm, email: event.target.value })} />
           <div className="relative flex items-center">
             <input
+              id="user-password"
               className={`${inputClass} pr-12 font-mono tracking-widest`}
               type="text"
               value={userForm.password}
-              readOnly
+              onChange={(event) => setUserForm({ ...userForm, password: event.target.value })}
               placeholder="Otomatik şifre"
             />
             <div className="absolute right-2 flex items-center">
               <button
+                id="generate-user-password-button"
                 type="button"
                 onClick={() => setUserForm((f) => ({ ...f, password: generatePassword() }))}
                 className="p-1.5 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
@@ -419,7 +424,7 @@ const ManagementPage = () => {
               </button>
             </div>
           </div>
-          <button onClick={handleCreateUser} className="mt-1 py-3 rounded-xl bg-blue-600 text-white font-bold flex items-center justify-center gap-2">
+          <button id="create-user-button" onClick={handleCreateUser} className="mt-1 py-3 rounded-xl bg-blue-600 text-white font-bold flex items-center justify-center gap-2">
             <Plus className="w-5 h-5" />
             Kullanıcı Oluştur
           </button>
@@ -435,6 +440,7 @@ const ManagementPage = () => {
           showScrollbar={true}
           renderItem={(user: any) => (
             <EmployeeListItem
+              id={`user-row-${user.email}`}
               key={user._id ?? user.id}
               firstName={user.firstName}
               lastName={user.lastName}
@@ -453,9 +459,10 @@ const ManagementPage = () => {
         className="h-full min-h-0"
       >
         <div className="flex flex-col gap-3">
-          <input className={inputClass} placeholder="Takım adı" value={teamName} onChange={(event) => setTeamName(event.target.value)} />
+          <input id="team-name" className={inputClass} placeholder="Takım adı" value={teamName} onChange={(event) => setTeamName(event.target.value)} />
           <div className="relative">
             <select
+              id="team-lead"
               className={`w-full p-3.5 pr-10 rounded-xl border-2 border-gray-100 bg-gray-50 focus:border-blue-500 focus:outline-none transition-all duration-200 font-semibold appearance-none ${
                 newTeamLeadId === "" ? "text-gray-400" : "text-gray-700"
               }`}
@@ -466,12 +473,12 @@ const ManagementPage = () => {
                 Takım lideri seçin
               </option>
               {users.filter((user) => user.role !== "admin" && !user.teamId).map((user) => (
-                <option key={user._id ?? user.id} value={user._id ?? user.id}>{user.firstName} {user.lastName}</option>
+                <option id={`team-lead-option-${user.email}`} key={user._id ?? user.id} value={user._id ?? user.id}>{user.firstName} {user.lastName}</option>
               ))}
             </select>
             <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
           </div>
-          <button onClick={handleCreateTeam} className="py-3 rounded-xl bg-emerald-600 text-white font-bold flex items-center justify-center gap-2">
+          <button id="create-team-button" onClick={handleCreateTeam} className="py-3 rounded-xl bg-emerald-600 text-white font-bold flex items-center justify-center gap-2">
             <Plus className="w-5 h-5" />
             Takım Oluştur
           </button>
@@ -487,6 +494,7 @@ const ManagementPage = () => {
           showScrollbar={true}
           renderItem={(team: any) => (
             <EmployeeListItem
+              id={`team-row-${team.teamName}`}
               key={team.id}
               primaryText={team.teamName}
               secondaryText={team.teamLead ? `${team.teamLead.firstName} ${team.teamLead.lastName}` : "Lider atanmadı"}
@@ -543,6 +551,7 @@ const ManagementPage = () => {
             </div>
 
             <button
+              id="manage-team-members-button"
               type="button"
               onClick={openMemberPopup}
               className="py-3 rounded-xl bg-gray-900 text-white font-bold flex items-center justify-center gap-2 hover:bg-gray-800 transition-colors"
@@ -580,6 +589,7 @@ const ManagementPage = () => {
             </div>
 
             <button
+              id="delete-team-button"
               type="button"
               onClick={() => setDeletePopupOpen(true)}
               className="py-3 rounded-xl bg-red-600 text-white font-bold flex items-center justify-center gap-2 hover:bg-red-700 transition-colors"
@@ -661,6 +671,7 @@ const ManagementPage = () => {
             />
 
             <button
+              id="delete-user-button"
               type="button"
               onClick={() => setUserDeleteConfirmOpen(true)}
               disabled={removingUser}
@@ -782,6 +793,7 @@ const ManagementPage = () => {
             </span>
             <div className="flex shrink-0 items-center gap-2">
               <button
+                id="cancel-team-members-button"
                 type="button"
                 onClick={() => setMemberPopupOpen(false)}
                 disabled={savingMembers}
@@ -791,6 +803,7 @@ const ManagementPage = () => {
                 Vazgeç
               </button>
               <button
+                id="save-team-members-button"
                 type="button"
                 onClick={handleSaveMembers}
                 disabled={savingMembers}
@@ -821,7 +834,9 @@ const ManagementPage = () => {
                     }`}
                   >
                     <input
+                      id={`team-member-${user.email}`}
                       type="checkbox"
+                      data-user-email={user.email}
                       checked={checked}
                       onChange={() => toggleMember(userId)}
                       className="h-4 w-4 accent-gray-900"
@@ -885,6 +900,7 @@ const ManagementPage = () => {
             </div>
             <div className="flex items-center gap-3 mt-2">
               <button
+                id="cancel-delete-team-button"
                 type="button"
                 onClick={() => setDeletePopupOpen(false)}
                 disabled={deletingTeam}
@@ -894,6 +910,7 @@ const ManagementPage = () => {
                 Geri Dön
               </button>
               <button
+                id="confirm-delete-team-button"
                 type="button"
                 onClick={handleDeleteTeam}
                 disabled={deletingTeam}

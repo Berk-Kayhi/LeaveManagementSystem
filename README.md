@@ -1,6 +1,8 @@
-# Leave Management System
+# Leave Management System + UI Test Automation
 
-Leave Management System; çalışan izin taleplerini, takım yönetimini, onay akışlarını ve bildirimleri yöneten bir web uygulamasıdır. Proje React tabanlı bir istemci ve üç ayrı Node.js servisten oluşur.
+Leave Management System; çalışan izin taleplerini, takım yönetimini, onay akışlarını ve bildirimleri yöneten full-stack bir web uygulamasıdır. Proje React tabanlı bir istemci, üç ayrı Node.js servisi ve Selenium/TestNG ile hazırlanmış UI test otomasyonu içerir.
+
+Bu repo yalnızca uygulama kodunu değil, aynı zamanda admin, takım lideri ve çalışan rollerini kapsayan uçtan uca otomasyon senaryolarını da içerir. Test otomasyonu; ilk admin kurulumu, demo veri hazırlama, role-based sayfa turu, izin talebi oluşturma, onay/red ve temizlik akışlarını doğrular.
 
 ## Teknolojiler
 
@@ -8,6 +10,7 @@ Leave Management System; çalışan izin taleplerini, takım yönetimini, onay a
 - Kimlik servisi: Node.js, Express, MongoDB, JWT
 - Yönetim servisi: Node.js, Express, PostgreSQL, Sequelize
 - Bildirim servisi: Node.js, Express, MongoDB, Socket.IO
+- Test otomasyonu: Selenium WebDriver, TestNG, Maven
 - Çalıştırma ortamı: Docker
 
 ## Proje Yapısı
@@ -17,6 +20,7 @@ client/                     React istemcisi
 backend/authService/        Kimlik doğrulama ve kullanıcı yönetimi
 backend/managementService/  Takım ve izin yönetimi
 backend/socketService/      Bildirim API'si ve Socket.IO bağlantısı
+TestAutomation/             Selenium/TestNG tabanlı UI test otomasyonu
 docker-compose.yml          Docker tanımlaması
 .env.example                Ortam değişkenleri şablonu
 docs/screenshots/           README ekran görüntüleri
@@ -64,6 +68,39 @@ Bu form üzerinden ilk admin hesabı oluşturulduğu anda:
 2. İlk çalıştırmada admin hesabınızı oluşturun.
 3. Admin hesabı ile giriş yaptıktan sonra kullanıcı, takım ve izin yönetimi ekranlarını kullanın.
 4. Çalışanlar izin talebi oluşturabilir; takım liderleri ve adminler yetkilerine göre talepleri yönetebilir.
+
+## Test Otomasyonu
+
+Proje içinde Selenium WebDriver ve TestNG ile hazırlanmış UI test otomasyonu bulunur. Testler [`TestAutomation`](TestAutomation) klasörü altında tutulur ve gerçek kullanıcı akışlarını uçtan uca doğrular.
+
+Otomasyon kapsamı:
+
+- İlk admin kurulum kontrolü
+- Role-based login akışları
+- Admin kullanıcı ve takım yönetimi
+- Takım lideri ve çalışan izin talebi oluşturma
+- Admin ve takım lideri onay/red akışları
+- Rol bazlı sayfa turu ve bildirim paneli kontrolü
+- Demo veri hazırlama senaryosu
+
+Ana testler:
+
+- `PositiveDemoDataSetupTest`: Demo sunum için admin, takım lideri, iki çalışan, takım ve izin kayıtları oluşturur. Bu test ortamda veri bırakır.
+- `PositiveRoleBasedPageTourTest`: Demo hesaplarla admin, takım lideri ve çalışan ekranlarını gezer. Veri oluşturmaz veya silmez.
+- `PositiveRoleBasedLeaveLifecycleTest`: Kullanıcı, takım, izin talebi, onay/red ve temizlik adımlarını tek lifecycle senaryosunda doğrular.
+
+Testleri çalıştırmadan önce uygulama servisleri ayağa kalkmış olmalıdır:
+
+```bash
+docker compose up --build
+```
+
+SafariDriver kullanıldığı için macOS üzerinde Safari otomasyon izninin açık olması gerekir. Testleri çalıştırmak için:
+
+```bash
+cd TestAutomation
+mvn test
+```
 
 ## Ekran Görüntüleri
 

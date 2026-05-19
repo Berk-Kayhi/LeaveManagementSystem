@@ -45,6 +45,7 @@ const Popup: React.FC<PopupProps> = ({ isOpen, onClose, title, children, classNa
                 <h2 ref={titleRef} className="text-2xl font-bold text-gray-800">{title}</h2>
               </div>
               <button
+                id="popup-close-button"
                 onClick={onClose}
                 className="hover:bg-gray-100 rounded-full transition-colors text-gray-400 hover:text-gray-600"
               >

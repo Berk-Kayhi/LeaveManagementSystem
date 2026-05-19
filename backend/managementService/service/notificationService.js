@@ -5,6 +5,16 @@ const SOCKET_NOTIFICATIONS_URL = `${process.env.SOCKET_SERVICE_URL}/api/notifica
 
 const getUserId = (user) => String(user?._id ?? user?.id ?? "");
 const getRole = (user) => user?.role?.toLowerCase();
+const findUserById = (users, userId) =>
+  users.find((user) => getUserId(user) === String(userId));
+
+const uniqueRecipients = (recipientUserIds, actorUserId) => [
+  ...new Set(
+    recipientUserIds
+      .map((id) => String(id || ""))
+      .filter((id) => id && id !== String(actorUserId)),
+  ),
+];
 
 const fetchUsers = async (authHeader) => {
   const response = await fetch(AUTH_USERS_URL, {
@@ -58,14 +68,12 @@ const getEndDate = (startDateStr, days) => {
 exports.notifyLeaveCreated = async (leave, currentUser, authHeader) => {
   const actorUserId = String(currentUser?.id ?? leave.userId);
   const users = await fetchUsers(authHeader);
-  const actorUser = users.find((user) => getUserId(user) === actorUserId);
+  const actorUser = findUserById(users, actorUserId);
   const role = getRole(actorUser) || getRole(currentUser);
   const team = await Team.findByPk(leave.teamId);
-  const isTeamLeadLeave =
-    role === "team_lead" || String(team?.teamLeadId ?? "") === actorUserId;
   let recipientUserIds = [];
 
-  if (isTeamLeadLeave) {
+  if (role === "team_lead") {
     recipientUserIds = users
       .filter((user) => getRole(user) === "admin")
       .map(getUserId);
@@ -75,8 +83,7 @@ exports.notifyLeaveCreated = async (leave, currentUser, authHeader) => {
 
   const dateRange = `${formatDate(leave.startDate)} - ${getEndDate(leave.startDate, leave.days)}`;
 
-  const notifications = recipientUserIds
-    .filter((recipientUserId) => recipientUserId && recipientUserId !== actorUserId)
+  const notifications = uniqueRecipients(recipientUserIds, actorUserId)
     .map((recipientUserId) => ({
       recipientUserId,
       actorUserId,

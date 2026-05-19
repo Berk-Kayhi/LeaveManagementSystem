@@ -114,6 +114,7 @@ const LeaveDetailPopup: React.FC<LeaveDetailPopupProps> = ({
               </div>
               <div className="flex items-center gap-3 mt-2">
                 <button
+                  id="cancel-leave-action-button"
                   onClick={() => setConfirmAction(null)}
                   className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gray-100 text-gray-600 hover:bg-gray-200 border-2 border-gray-200 text-sm font-semibold transition-all duration-200 cursor-pointer"
                 >
@@ -121,6 +122,7 @@ const LeaveDetailPopup: React.FC<LeaveDetailPopupProps> = ({
                   Geri Dön
                 </button>
                 <button
+                  id={`confirm-leave-${confirmAction.type}-button`}
                   onClick={handleConfirmAction}
                   className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 cursor-pointer border-2 ${confirmAction.type === "approve"
                     ? "bg-emerald-500 text-white hover:bg-emerald-600 border-emerald-500 hover:border-emerald-600"
@@ -268,11 +270,11 @@ const LeaveDetailPopup: React.FC<LeaveDetailPopupProps> = ({
               <>
                 <div className="h-px bg-gray-200"></div>
                 <div className="grid grid-cols-2 gap-3">
-                  <button className="flex items-center justify-center gap-2 py-2.5 rounded-xl bg-rose-50 text-rose-600 hover:bg-rose-100 border-2 border-rose-200 hover:border-rose-300 text-sm font-semibold transition-all duration-200 cursor-pointer" onClick={() => setConfirmAction({ type: "reject", id: leaveData.leaveId })}>
+                  <button id="reject-leave-button" className="flex items-center justify-center gap-2 py-2.5 rounded-xl bg-rose-50 text-rose-600 hover:bg-rose-100 border-2 border-rose-200 hover:border-rose-300 text-sm font-semibold transition-all duration-200 cursor-pointer" onClick={() => setConfirmAction({ type: "reject", id: leaveData.leaveId })}>
                     <XCircle className="w-4 h-4" />
                     Reddet
                   </button>
-                  <button className="flex items-center justify-center gap-2 py-2.5 rounded-xl bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border-2 border-emerald-200 hover:border-emerald-300 text-sm font-semibold transition-all duration-200 cursor-pointer" onClick={() => setConfirmAction({ type: "approve", id: leaveData.leaveId })}>
+                  <button id="approve-leave-button" className="flex items-center justify-center gap-2 py-2.5 rounded-xl bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border-2 border-emerald-200 hover:border-emerald-300 text-sm font-semibold transition-all duration-200 cursor-pointer" onClick={() => setConfirmAction({ type: "approve", id: leaveData.leaveId })}>
                     <CheckCircle2 className="w-4 h-4" />
                     Onayla
                   </button>

@@ -1,6 +1,7 @@
 import React from "react";
 
 interface EmployeeListItemProps {
+  id?: string;
   firstName?: string;
   lastName?: string;
   imageAlt?: string;
@@ -14,6 +15,7 @@ interface EmployeeListItemProps {
 }
 
 const EmployeeListItem: React.FC<EmployeeListItemProps> = ({
+  id,
   firstName,
   lastName,
   imageAlt,
@@ -32,6 +34,7 @@ const EmployeeListItem: React.FC<EmployeeListItemProps> = ({
 
   return (
     <div
+      id={id}
       onClick={onClick}
       className={`flex items-start justify-between p-2 rounded-lg border-2 border-gray-200 transition-colors duration-200 ${
         onClick ? "cursor-pointer hover:bg-gray-200" : ""

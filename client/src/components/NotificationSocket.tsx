@@ -9,6 +9,8 @@ import LeaveDetailPopup from "./LeaveDetailPopup";
 
 interface NotificationPayload {
   id?: string;
+  recipientUserId?: string;
+  actorUserId?: string;
   type?: string;
   title?: string;
   message?: string;
@@ -71,6 +73,17 @@ const NotificationSocket = () => {
   const [selectedLeave, setSelectedLeave] = useState<LeaveRecord | null>(null);
   const [popupData, setPopupData] = useState<LeaveRecord[]>([]);
   const notificationPanelRef = useRef<HTMLDivElement>(null);
+  const isNotificationForCurrentUser = useCallback((notification: NotificationPayload) => {
+    if (!user?.id) return false;
+
+    const recipientUserId = notification.recipientUserId;
+    const actorUserId = notification.actor?.id || notification.actorUserId;
+
+    if (recipientUserId && String(recipientUserId) !== String(user.id)) return false;
+    if (actorUserId && String(actorUserId) === String(user.id)) return false;
+
+    return true;
+  }, [user]);
 
   useEffect(() => {
     if (!user) return;
@@ -83,6 +96,7 @@ const NotificationSocket = () => {
     try {
       const notification = JSON.parse(pendingNotification) as NotificationPayload;
       if (!notification.id) return;
+      if (!isNotificationForCurrentUser(notification)) return;
 
       setTimeout(() => {
         setNotifications((current) => [
@@ -101,6 +115,25 @@ const NotificationSocket = () => {
     } catch (error) {
       console.error("Reload sonrası bildirim gösterilemedi:", error);
     }
+  }, [user, isNotificationForCurrentUser]);
+
+  useEffect(() => {
+    if (user) return;
+
+    if (notificationReloadTimer) {
+      clearTimeout(notificationReloadTimer);
+      notificationReloadTimer = null;
+    }
+
+    setTimeout(() => {
+      sessionStorage.removeItem(pendingReloadNotificationKey);
+      setNotifications([]);
+      setSelectedLeave(null);
+      setPopupData([]);
+      setIsPanelMode(false);
+      window.dispatchEvent(new CustomEvent(notificationEvents.cleared));
+      window.dispatchEvent(new CustomEvent(notificationEvents.clearedPermanently));
+    }, 0);
   }, [user]);
 
   useEffect(() => {
@@ -133,6 +166,8 @@ const NotificationSocket = () => {
     }
 
     const handleNotification = (notification: NotificationPayload) => {
+      if (!isNotificationForCurrentUser(notification)) return;
+
       const notificationId =
         notification.id ||
         `${notification.type || "notification"}-${notification.leaveId || Date.now()}`;
@@ -185,7 +220,7 @@ const NotificationSocket = () => {
     return () => {
       socket.off("notification", handleNotification);
     };
-  }, [user, isPanelMode]);
+  }, [user, isPanelMode, isNotificationForCurrentUser]);
 
   const selectedLeaveStats = useMemo(() => {
     if (!selectedLeave) return null;

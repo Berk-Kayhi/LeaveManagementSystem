@@ -1,6 +1,41 @@
 const Notification = require("../models/Notification");
 const { fetchUsers, getUserId } = require("./authService");
 
+const getRole = (user) => user?.role?.toLowerCase();
+const findUserById = (users, userId) =>
+  users.find((user) => getUserId(user) === String(userId));
+
+const isNotificationVisibleForUser = (notification, currentUser, users) => {
+  const recipientUserId = String(notification?.recipientUserId ?? "");
+  const actorUserId = String(notification?.actorUserId ?? "");
+  const currentUserId = getUserId(currentUser);
+
+  if (!recipientUserId || recipientUserId !== currentUserId) return false;
+  if (!actorUserId || actorUserId === currentUserId) return false;
+
+  const currentRole = getRole(currentUser);
+  const actorRole = getRole(findUserById(users, actorUserId));
+  const type = notification?.type;
+
+  if (currentRole === "admin") {
+    return type === "leave_created" && actorRole === "team_lead";
+  }
+
+  if (currentRole === "team_lead") {
+    return (
+      (type === "leave_created" && actorRole === "employee") ||
+      type === "leave_approved" ||
+      type === "leave_rejected"
+    );
+  }
+
+  if (currentRole === "employee") {
+    return type === "leave_approved" || type === "leave_rejected";
+  }
+
+  return false;
+};
+
 const enrichNotification = (notification, users) => {
   const plainNotification = notification.toObject ? notification.toObject() : notification;
   const actor = users.find((user) => getUserId(user) === String(plainNotification.actorUserId));
@@ -26,8 +61,11 @@ exports.getNotifications = async (userId, authHeader) => {
     isDeleted: false,
   }).sort({ createdAt: -1 });
   const users = await fetchUsers(authHeader);
+  const currentUser = findUserById(users, userId);
 
-  return notifications.map((notification) => enrichNotification(notification, users));
+  return notifications
+    .filter((notification) => isNotificationVisibleForUser(notification, currentUser, users))
+    .map((notification) => enrichNotification(notification, users));
 };
 
 exports.markAsRead = async (id, userId, authHeader) => {
@@ -79,11 +117,11 @@ exports.createNotifications = async (rawNotifications, authHeader) => {
   const notifications = Array.isArray(rawNotifications)
     ? rawNotifications
     : [rawNotifications].filter(Boolean);
-  const safeNotifications = notifications.filter(
-    (notification) =>
-      String(notification?.recipientUserId ?? "") !==
-      String(notification?.actorUserId ?? ""),
-  );
+  const users = await fetchUsers(authHeader);
+  const safeNotifications = notifications.filter((notification) => {
+    const recipientUser = findUserById(users, notification?.recipientUserId);
+    return isNotificationVisibleForUser(notification, recipientUser, users);
+  });
 
   if (!notifications.length) {
     const error = new Error("Bildirim içeriği zorunludur.");
@@ -94,6 +132,5 @@ exports.createNotifications = async (rawNotifications, authHeader) => {
   if (!safeNotifications.length) return [];
 
   const createdNotifications = await Notification.insertMany(safeNotifications);
-  const users = await fetchUsers(authHeader);
   return createdNotifications.map((notification) => enrichNotification(notification, users));
 };

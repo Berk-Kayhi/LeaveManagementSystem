@@ -377,6 +377,7 @@ const MainPage = () => {
         disableLimit={true}
         renderItem={(leave: any) => (
           <EmployeeListItem
+            id={`my-leave-${leave.details || leave.description || leave.leaveId}`}
             key={leave.id ?? leave.leaveId}
             primaryText={leave.reason ?? "İzin"}
             secondaryText={DateTime.fromISO(leave.startDate)
@@ -417,6 +418,7 @@ const MainPage = () => {
               userRole === "team_lead" && (
                 <div className="flex bg-gray-100 p-1 rounded-xl shadow-inner">
                   <button
+                    id="team-dashboard-tab"
                     onClick={() => setViewMode("stats")}
                     className={`px-3 py-1.5 text-[10px] sm:text-xs font-bold uppercase tracking-wider rounded-lg transition-all duration-200 ${
                       viewMode === "stats"
@@ -427,6 +429,7 @@ const MainPage = () => {
                     Takım
                   </button>
                   <button
+                    id="personal-dashboard-tab"
                     onClick={() => setViewMode("my")}
                     className={`px-3 py-1.5 text-[10px] sm:text-xs font-bold uppercase tracking-wider rounded-lg transition-all duration-200 ${
                       viewMode === "my"
@@ -571,6 +574,7 @@ const MainPage = () => {
                 emptyText={viewMode === "stats" ? `Bekleyen ${managedPersonLowerPlural} izin talebi bulunmuyor.` : "Yaklaşan onaylı izin bulunmuyor."}
                 renderItem={(leave: any) => (
                   <EmployeeListItem
+                    id={`pending-leave-${leave.details || leave.description || leave.leaveId}`}
                     key={leave.id ?? leave.leaveId}
                     firstName={viewMode === "stats" ? leave.firstName : undefined}
                     lastName={viewMode === "stats" ? leave.lastName : undefined}
@@ -594,6 +598,7 @@ const MainPage = () => {
                 emptyText="Yaklaşan onaylı izin bulunmuyor."
                 renderItem={(leave: any) => (
                   <EmployeeListItem
+                    id={`my-leave-${leave.details || leave.description || leave.leaveId}`}
                     key={leave.id ?? leave.leaveId}
                     primaryText={leave.reason ?? "İzin"}
                     secondaryText={leave.formattedSecondaryText}

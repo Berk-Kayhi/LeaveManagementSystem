@@ -1,14 +1,25 @@
 import { useNavigate, useLocation } from "react-router-dom";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import toast from "react-hot-toast";
 import { DateTime } from "luxon";
 import { useEffect } from "react";
-import { Bell, Home, LogOut, Calendar1, SlidersHorizontal, History, Plus, Users } from "lucide-react";
+import {
+  Bell,
+  Home,
+  LogOut,
+  Calendar1,
+  SlidersHorizontal,
+  History,
+  Plus,
+  Users,
+} from "lucide-react";
 import { useAuth } from "../context/authContext.tsx";
 import { api, authApi, notificationApi } from "../services/api";
 
 interface SidebarNotification {
   id: string;
+  recipientUserId?: string;
+  actorUserId?: string;
   type: "leave_created" | "leave_approved" | "leave_rejected";
   title: string;
   message: string;
@@ -16,6 +27,7 @@ interface SidebarNotification {
   createdAt: string;
   isRead?: boolean;
   actor?: {
+    id?: string;
     firstName?: string;
     lastName?: string;
   } | null;
@@ -26,12 +38,24 @@ const Sidebar = () => {
   const [currentDate, setCurrentDate] = useState("");
   const [teamName, setTeamName] = useState<string | null>(null);
   const [notifications, setNotifications] = useState<SidebarNotification[]>([]);
-  const [isNotificationsPanelOpen, setIsNotificationsPanelOpen] = useState(false);
+  const [isNotificationsPanelOpen, setIsNotificationsPanelOpen] =
+    useState(false);
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const userRole = user?.role?.toLowerCase();
   const canManageLeaves = userRole === "admin" || userRole === "team_lead";
+  const isNotificationForCurrentUser = useCallback((notification: SidebarNotification) => {
+    if (!user?.id) return false;
+
+    const recipientUserId = notification.recipientUserId;
+    const actorUserId = notification.actor?.id || notification.actorUserId;
+
+    if (recipientUserId && String(recipientUserId) !== String(user.id)) return false;
+    if (actorUserId && String(actorUserId) === String(user.id)) return false;
+
+    return true;
+  }, [user]);
   const handleLogout = async () => {
     await authApi.logout();
     logout();
@@ -71,6 +95,10 @@ const Sidebar = () => {
 
   useEffect(() => {
     if (!user) {
+      setTimeout(() => {
+        setNotifications([]);
+        setIsNotificationsPanelOpen(false);
+      }, 0);
       return;
     }
 
@@ -78,7 +106,7 @@ const Sidebar = () => {
       try {
         const result = await notificationApi.get();
         if (result.success && Array.isArray(result.data)) {
-          setNotifications(result.data);
+          setNotifications(result.data.filter(isNotificationForCurrentUser));
         }
       } catch (error) {
         console.error("Bildirimler alınamadı:", error);
@@ -86,11 +114,12 @@ const Sidebar = () => {
     };
 
     fetchNotifications();
-  }, [user]);
+  }, [user, isNotificationForCurrentUser]);
 
   useEffect(() => {
     const handleNotificationReceived = (event: Event) => {
       const notification = (event as CustomEvent<SidebarNotification>).detail;
+      if (!isNotificationForCurrentUser(notification)) return;
       setNotifications((current) => [
         notification,
         ...current.filter((item) => item.id !== notification.id),
@@ -105,7 +134,9 @@ const Sidebar = () => {
     const handleNotificationRead = (event: Event) => {
       const { id } = (event as CustomEvent<{ id: string }>).detail;
       setNotifications((current) =>
-        current.map((item) => item.id === id ? { ...item, isRead: true } : item),
+        current.map((item) =>
+          item.id === id ? { ...item, isRead: true } : item,
+        ),
       );
     };
 
@@ -121,24 +152,53 @@ const Sidebar = () => {
       setIsNotificationsPanelOpen(true);
     };
 
-    window.addEventListener("notification-received", handleNotificationReceived);
+    window.addEventListener(
+      "notification-received",
+      handleNotificationReceived,
+    );
     window.addEventListener("notification-deleted", handleNotificationDeleted);
     window.addEventListener("notification-read", handleNotificationRead);
-    window.addEventListener("notifications-cleared-permanently", handleNotificationsClearedPermanently);
-    window.addEventListener("notifications-cleared", handleNotificationsCleared);
-    window.addEventListener("show-notifications-top-right", handleNotificationsShown);
+    window.addEventListener(
+      "notifications-cleared-permanently",
+      handleNotificationsClearedPermanently,
+    );
+    window.addEventListener(
+      "notifications-cleared",
+      handleNotificationsCleared,
+    );
+    window.addEventListener(
+      "show-notifications-top-right",
+      handleNotificationsShown,
+    );
 
     return () => {
-      window.removeEventListener("notification-received", handleNotificationReceived);
-      window.removeEventListener("notification-deleted", handleNotificationDeleted);
+      window.removeEventListener(
+        "notification-received",
+        handleNotificationReceived,
+      );
+      window.removeEventListener(
+        "notification-deleted",
+        handleNotificationDeleted,
+      );
       window.removeEventListener("notification-read", handleNotificationRead);
-      window.removeEventListener("notifications-cleared-permanently", handleNotificationsClearedPermanently);
-      window.removeEventListener("notifications-cleared", handleNotificationsCleared);
-      window.removeEventListener("show-notifications-top-right", handleNotificationsShown);
+      window.removeEventListener(
+        "notifications-cleared-permanently",
+        handleNotificationsClearedPermanently,
+      );
+      window.removeEventListener(
+        "notifications-cleared",
+        handleNotificationsCleared,
+      );
+      window.removeEventListener(
+        "show-notifications-top-right",
+        handleNotificationsShown,
+      );
     };
-  }, []);
+  }, [isNotificationForCurrentUser]);
 
-  const handleOpenNotificationPanel = async (event: React.MouseEvent<HTMLButtonElement>) => {
+  const handleOpenNotificationPanel = async (
+    event: React.MouseEvent<HTMLButtonElement>,
+  ) => {
     event.stopPropagation();
 
     if (notifications.length === 0) {
@@ -154,7 +214,10 @@ const Sidebar = () => {
       return;
     }
 
-    const visibleNotifications = notifications.map((item) => ({ ...item, isRead: true }));
+    const visibleNotifications = notifications.map((item) => ({
+      ...item,
+      isRead: true,
+    }));
     setNotifications(visibleNotifications);
     window.dispatchEvent(
       new CustomEvent("show-notifications-top-right", {
@@ -174,22 +237,51 @@ const Sidebar = () => {
     str ? str.charAt(0).toUpperCase() + str.slice(1) : "";
 
   const menuItems = [
-    { name: "AnaSayfa", href: "/main", icon: Home },
-    { name: "Takvim", href: "/calendar", icon: Calendar1 },
+    { name: "AnaSayfa", href: "/main", icon: Home, id: "main-page" },
+    { name: "Takvim", href: "/calendar", icon: Calendar1, id: "calendar-page" },
     ...(canManageLeaves
       ? [
-        { name: "İzin İstekleri", href: "/management", icon: SlidersHorizontal },
-        { name: "İstek Geçmişi", href: "/history-leaves", icon: History },
-        ...(userRole === "admin"
-          ? [{ name: "Yönetim", href: "/admin-management", icon: Users }]
-          : []),
-        ...(userRole === "team_lead"
-          ? [{ name: "İzin Talebi Oluştur", href: "/request-leave", icon: Plus }]
-          : []),
-      ]
+          {
+            name: "İzin İstekleri",
+            href: "/management",
+            icon: SlidersHorizontal,
+            id: "management-page",
+          },
+          {
+            name: "İstek Geçmişi",
+            href: "/history-leaves",
+            icon: History,
+            id: "history-leaves-page",
+          },
+          ...(userRole === "admin"
+            ? [
+                {
+                  name: "Yönetim",
+                  href: "/admin-management",
+                  icon: Users,
+                  id: "admin-management-page",
+                },
+              ]
+            : []),
+          ...(userRole === "team_lead"
+            ? [
+                {
+                  name: "İzin Talebi Oluştur",
+                  href: "/request-leave",
+                  icon: Plus,
+                  id: "request-leave-page",
+                },
+              ]
+            : []),
+        ]
       : [
-        { name: "İzin Talebi Oluştur", href: "/request-leave", icon: Plus },
-      ]),
+          {
+            name: "İzin Talebi Oluştur",
+            href: "/request-leave",
+            icon: Plus,
+            id: "request-leave-page",
+          },
+        ]),
   ];
 
   return (
@@ -230,10 +322,12 @@ const Sidebar = () => {
                 <button
                   key={item.name}
                   onClick={() => navigate(item.href)}
-                  className={`flex items-center w-full px-4 py-3 rounded-lg duration-400 ${location.pathname === item.href
-                    ? "bg-gray-200 text-gray-800 border-2 border-gray-800"
-                    : "text-gray-700 hover:bg-gray-100 border-gray-100 border-2"
-                    }`}
+                  id={item.id}
+                  className={`flex items-center w-full px-4 py-3 rounded-lg duration-400 ${
+                    location.pathname === item.href
+                      ? "bg-gray-200 text-gray-800 border-2 border-gray-800"
+                      : "text-gray-700 hover:bg-gray-100 border-gray-100 border-2"
+                  }`}
                 >
                   <item.icon size={24} className="mr-3" />
                   {item.name}
@@ -244,15 +338,16 @@ const Sidebar = () => {
           <div className="grow"></div>
           <button
             type="button"
+            id="notifications-button"
             data-notification-toggle
             onClick={handleOpenNotificationPanel}
             className="mb-2 flex w-full items-center rounded-lg border-2 border-gray-100 px-4 py-3 text-lg text-gray-700 duration-400 hover:bg-gray-100"
           >
             <Bell size={24} className="mr-3" />
             <span className="flex-1 text-left">Bildirimler</span>
-            {notifications.filter(n => !n.isRead).length > 0 && (
+            {notifications.filter((n) => !n.isRead).length > 0 && (
               <span className="ml-2 flex h-6 min-w-6 items-center justify-center rounded-full bg-red-500 px-1.5 text-xs font-bold leading-none text-white">
-                {notifications.filter(n => !n.isRead).length}
+                {notifications.filter((n) => !n.isRead).length}
               </span>
             )}
           </button>
@@ -264,6 +359,7 @@ const Sidebar = () => {
             </div>
             <button
               onClick={handleLogout}
+              id="quit-button"
               className={`flex items-center justify-center w-10 h-10 rounded-lg duration-400 text-red-700 bg-red-100 hover:bg-red-200 border-red-200 border-2`}
             >
               <LogOut className="text-2xl text-center" />

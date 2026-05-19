@@ -185,6 +185,7 @@ const LeaveRequestPage = () => {
               <div className="flex flex-col gap-4 h-full min-w-0">
                 <div className="relative flex flex-col gap-2">
                   <select
+                    id="leave-type"
                     value={leaveType}
                     onChange={(e) => setLeaveType(e.target.value)}
                     className={`w-full p-3.5 pr-10 rounded-xl border-2 border-gray-100 bg-gray-50 focus:border-blue-500 focus:outline-none transition-all duration-200 font-semibold appearance-none ${
@@ -194,7 +195,7 @@ const LeaveRequestPage = () => {
                     <option value="" disabled hidden>
                       İzin türünü seçiniz
                     </option>
-                    <option>Yıllık İzin</option>
+                    <option id="leave-type-annual">Yıllık İzin</option>
                     <option>Mazeret İzni</option>
                     <option>Hastalık / Rapor</option>
                     <option>Ücretsiz İzin</option>
@@ -204,6 +205,7 @@ const LeaveRequestPage = () => {
 
                 <div className="relative h-full">
                   <textarea
+                    id="leave-reason"
                     placeholder="İzin talebinizle ilgili bir açıklama yazınız..."
                     value={reason}
                     onChange={(e) => setReason(e.target.value)}
@@ -264,6 +266,7 @@ const LeaveRequestPage = () => {
 
             <div className="mt-auto">
               <button
+                id="submit-leave-request-button"
                 onClick={handleSubmit}
                 className="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-base transition-all duration-200 flex items-center justify-center gap-3 group"
               >
