@@ -2,6 +2,7 @@ package pages;
 
 import base.BasePage;
 
+import io.qameta.allure.Step;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.support.ui.ExpectedConditions;
@@ -22,6 +23,7 @@ public class LoginPage extends BasePage {
     public By ADMIN_PASSWORD = By.id("admin-password");
     public By ADMIN_BUTTON = By.id("admin-button");
 
+    @Step("İlk admin kurulum formu açıksa admin oluştur: {email}")
     public boolean registerFirstAdminIfSetupOpen(String firstName, String lastName, String email, String password) {
         wait.until(ExpectedConditions.or(
                 ExpectedConditions.visibilityOfElementLocated(ADMIN_BUTTON),
@@ -37,10 +39,11 @@ public class LoginPage extends BasePage {
         clearAndSendKeys(ADMIN_EMAIL, email);
         clearAndSendKeys(ADMIN_PASSWORD, password);
         buttonClick(ADMIN_BUTTON);
-        waitForPageView();
+        validateUrlContains("/main");
         return true;
     }
 
+    @Step("Giriş yap: {email}")
     public LoginPage fillLoginForm(String email, String password, boolean rememberMe) {
         clearAndSendKeys(EMAIL, email);
         clearAndSendKeys(PASSWORD, password);
@@ -48,7 +51,7 @@ public class LoginPage extends BasePage {
             buttonClick(REMEMBER_ME);
         }
         buttonClick(LOGIN_BUTTON);
-        waitForPageView();
+        validateUrlContains("/main");
         return this;
     }
 

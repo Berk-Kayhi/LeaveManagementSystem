@@ -1,10 +1,18 @@
 package tests;
 
 import base.BaseTest;
+import io.qameta.allure.Description;
+import io.qameta.allure.Epic;
+import io.qameta.allure.Feature;
+import io.qameta.allure.Story;
 import org.testng.annotations.Test;
 
+@Epic("Leave Management UI Automation")
+@Feature("Role Based Leave Lifecycle")
 public class PositiveRoleBasedLeaveLifecycleTest extends BaseTest {
     @Test
+    @Story("Uçtan uca izin onay akışı")
+    @Description("Admin, takım lideri ve çalışan rolleriyle kullanıcı, takım, izin talebi, onay/red ve temizlik akışını doğrular.")
     public void positiveRoleBasedLeaveLifecycleTest() {
         loginAsAdmin();
         sidebarComponent.goToAdminManagementPage();

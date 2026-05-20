@@ -2,11 +2,15 @@ package base;
 
 import components.SidebarComponent;
 import data.MainData;
+import io.qameta.allure.Attachment;
+import org.openqa.selenium.OutputType;
+import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.safari.SafariDriver;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
+import org.testng.ITestResult;
 import pages.AdminManagementPage;
 import pages.LeaveRequestPage;
 import pages.LoginPage;
@@ -23,11 +27,10 @@ public class BaseTest extends MainData {
     protected LeaveRequestPage leaveRequestPage;
     protected MainPage mainPage;
 
-    @BeforeMethod
+    @BeforeMethod(alwaysRun = true)
     public void beforeTest() {
         driver = new SafariDriver();
         driver.manage().window().maximize();
-        driver.manage().deleteAllCookies();
         wait = new WebDriverWait(driver, Duration.ofSeconds(15));
         driver.get(URL);
         loginPage = new LoginPage(driver, wait);
@@ -45,15 +48,18 @@ public class BaseTest extends MainData {
         }
     }
 
-    @AfterMethod
-    public void afterTest() {
+    @AfterMethod(alwaysRun = true)
+    public void afterTest(ITestResult result) {
         if (driver != null) {
-            try {
-                Thread.sleep(2500);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
+            if (!result.isSuccess()) {
+                takeFailureScreenshot();
             }
             driver.quit();
         }
+    }
+
+    @Attachment(value = "Hata Anı Ekran Görüntüsü", type = "image/png")
+    public byte[] takeFailureScreenshot() {
+        return ((TakesScreenshot) driver).getScreenshotAs(OutputType.BYTES);
     }
 }

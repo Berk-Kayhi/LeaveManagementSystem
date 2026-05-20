@@ -1,10 +1,18 @@
 package tests;
 
 import base.BaseTest;
+import io.qameta.allure.Description;
+import io.qameta.allure.Epic;
+import io.qameta.allure.Feature;
+import io.qameta.allure.Story;
 import org.testng.annotations.Test;
 
+@Epic("Leave Management UI Automation")
+@Feature("Role Based Page Tour")
 public class PositiveRoleBasedPageTourTest extends BaseTest {
     @Test
+    @Story("Rol bazlı sayfa turu")
+    @Description("Admin, takım lideri ve çalışan rollerinde erişilebilir sayfaları ve bildirim panelini gezer.")
     public void positiveRoleBasedPageTourTest() {
         loginAsAdmin();
         sidebarComponent
@@ -13,8 +21,8 @@ public class PositiveRoleBasedPageTourTest extends BaseTest {
                 .goToManagementPage()
                 .goToHistoryLeavesPage()
                 .goToAdminManagementPage()
-                .clickNotificationButton()
-                .clickNotificationButton()
+                .openNotificationPanel()
+                .closeNotificationPanel()
                 .clickQuitButton();
 
         loginPage.fillLoginForm(demoTeamLeadEmail, demoTeamLeadPassword, rememberMe);
@@ -27,8 +35,8 @@ public class PositiveRoleBasedPageTourTest extends BaseTest {
                 .goToManagementPage()
                 .goToHistoryLeavesPage()
                 .goToRequestLeavePage()
-                .clickNotificationButton()
-                .clickNotificationButton()
+                .openNotificationPanel()
+                .closeNotificationPanel()
                 .clickQuitButton();
 
         loginPage.fillLoginForm(demoEmployeeEmail, demoEmployeePassword, rememberMe);
@@ -36,8 +44,8 @@ public class PositiveRoleBasedPageTourTest extends BaseTest {
                 .goToMainPage()
                 .goToCalendarPage()
                 .goToRequestLeavePage()
-                .clickNotificationButton()
-                .clickNotificationButton()
+                .openNotificationPanel()
+                .closeNotificationPanel()
                 .clickQuitButton();
 
         loginPage.fillLoginForm(demoSecondEmployeeEmail, demoSecondEmployeePassword, rememberMe);
@@ -45,7 +53,7 @@ public class PositiveRoleBasedPageTourTest extends BaseTest {
                 .goToMainPage()
                 .goToCalendarPage()
                 .goToRequestLeavePage()
-                .clickNotificationButton()
-                .clickNotificationButton();
+                .openNotificationPanel()
+                .closeNotificationPanel();
     }
 }

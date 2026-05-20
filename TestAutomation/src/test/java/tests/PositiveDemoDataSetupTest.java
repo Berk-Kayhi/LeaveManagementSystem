@@ -1,10 +1,18 @@
 package tests;
 
 import base.BaseTest;
+import io.qameta.allure.Description;
+import io.qameta.allure.Epic;
+import io.qameta.allure.Feature;
+import io.qameta.allure.Story;
 import org.testng.annotations.Test;
 
+@Epic("Leave Management UI Automation")
+@Feature("Demo Data Setup")
 public class PositiveDemoDataSetupTest extends BaseTest {
     @Test
+    @Story("Demo veri hazırlama")
+    @Description("Admin, takım lideri, iki çalışan, takım ve farklı durumlarda izin talepleri oluşturur.")
     public void positiveDemoDataSetupTest() {
         loginAsAdmin();
         sidebarComponent.goToAdminManagementPage();
@@ -46,7 +54,10 @@ public class PositiveDemoDataSetupTest extends BaseTest {
         mainPage
                 .openPersonalLeaveByReason(demoLeadLeaveReasons[0])
                 .approveLeaveByReason(demoEmployeeLeaveReasons[0])
-                .rejectLeaveByReason(demoEmployeeLeaveReasons[1])
+                .rejectLeaveByReason(demoEmployeeLeaveReasons[1]);
+
+        sidebarComponent.goToManagementPage();
+        mainPage
                 .approveLeaveByReason(demoSecondEmployeeLeaveReasons[0])
                 .rejectLeaveByReason(demoSecondEmployeeLeaveReasons[1]);
     }

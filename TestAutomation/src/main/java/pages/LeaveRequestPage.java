@@ -1,6 +1,7 @@
 package pages;
 
 import base.BasePage;
+import io.qameta.allure.Step;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.support.ui.WebDriverWait;
@@ -16,6 +17,7 @@ public class LeaveRequestPage extends BasePage {
     public By SUBMIT_LEAVE_REQUEST_BUTTON = By.id("submit-leave-request-button");
     public By DATE_PICKER_NEXT_MONTH = By.id("date-picker-next-month");
 
+    @Step("Yıllık izin talebi oluştur: {startDate} - {endDate}, açıklama: {reason}")
     public LeaveRequestPage createAnnualLeaveRequest(String startDate, String endDate, String reason) {
         buttonClick(LEAVE_TYPE);
         buttonClick(ANNUAL_LEAVE_TYPE);
@@ -23,7 +25,7 @@ public class LeaveRequestPage extends BasePage {
         selectDate(endDate);
         clearAndSendKeys(LEAVE_REASON, reason);
         buttonClick(SUBMIT_LEAVE_REQUEST_BUTTON);
-        waitForPageView();
+        takeScreenshot();
         return this;
     }
 

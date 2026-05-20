@@ -320,6 +320,7 @@ const Sidebar = () => {
             <div className="flex flex-col space-y-3">
               {menuItems.map((item) => (
                 <button
+                  type="button"
                   key={item.name}
                   onClick={() => navigate(item.href)}
                   id={item.id}

@@ -198,6 +198,7 @@ const LeaveManagementPage = () => {
                         emptyText="Onay bekleyen izin talebi bulunmuyor."
                         renderItem={(leave) => (
                             <EmployeeListItem
+                                id={`pending-leave-${leave.details || leave.reason || leave.leaveId}`}
                                 key={leave.leaveId}
                                 firstName={leave.firstName}
                                 lastName={leave.lastName}
