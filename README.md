@@ -102,6 +102,20 @@ cd TestAutomation
 mvn test
 ```
 
+### Allure Test Raporu
+
+UI otomasyon testlerinin Allure HTML raporu GitHub Pages üzerinden yayınlanır:
+
+[Canlı Allure Test Raporu](https://mqzesh34.github.io/LeaveManagementSystem/)
+
+Lokal olarak rapor üretmek için:
+
+```bash
+cd TestAutomation
+mvn test
+allure generate target/allure-results -o target/allure-report --clean
+```
+
 ## Ekran Görüntüleri
 
 Ekran görüntüleri rol bazlı klasörlerde tutulur. Ortak ekranlar [`docs/screenshots/global`](docs/screenshots/global), admin görünümü [`docs/screenshots/admin`](docs/screenshots/admin), takım lideri görünümü [`docs/screenshots/team_lead`](docs/screenshots/team_lead), çalışan görünümü ise [`docs/screenshots/emplooye`](docs/screenshots/emplooye) klasöründedir.
