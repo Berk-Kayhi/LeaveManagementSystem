@@ -106,7 +106,7 @@ mvn test
 
 UI otomasyon testlerinin Allure HTML raporu GitHub Pages üzerinden yayınlanır:
 
-[Canlı Allure Test Raporu](https://mqzesh34.github.io/LeaveManagementSystem/)
+[Canlı Allure Test Raporu](https://berk-kayhi.github.io/LeaveManagementSystem/)
 
 Lokal olarak rapor üretmek için:
 
