@@ -8,9 +8,13 @@ on:
   workflow_dispatch:
 
 jobs:
-  backend-ci:
-    name: Backend dependency ve unit test kontrolleri
+  auth-service-ci:
+    name: Auth Service CI
     runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: backend/authService
 
     steps:
       - name: Repository'den kodun alınması
@@ -21,39 +25,68 @@ jobs:
         with:
           node-version: "22"
           cache: npm
-          cache-dependency-path: |
-            backend/authService/package-lock.json
-            backend/managementService/package-lock.json
-            backend/socketService/package-lock.json
+          cache-dependency-path: backend/authService/package-lock.json
 
-      - name: authService bağımlılıklarının hazırlanması
-        run: |
-          cd backend/authService
-          npm ci
+      - name: Bağımlılıkların hazırlanması
+        run: npm ci
 
-      - name: authService unit ve integration testlerinin çalıştırılması
-        run: |
-          cd backend/authService
-          npm test
+      - name: Unit ve integration testlerinin çalıştırılması
+        run: npm test
 
-      - name: managementService bağımlılıklarının hazırlanması
-        run: |
-          cd backend/managementService
-          npm ci
+  management-service-ci:
+    name: Management Service CI
+    runs-on: ubuntu-latest
 
-      - name: socketService bağımlılıklarının hazırlanması
-        run: |
-          cd backend/socketService
-          npm ci
+    defaults:
+      run:
+        working-directory: backend/managementService
 
-      - name: socketService unit ve integration testlerinin çalıştırılması
-        run: |
-          cd backend/socketService
-          npm test
+    steps:
+      - name: Repository'den kodun alınması
+        uses: actions/checkout@v4
+
+      - name: Node.js ortamının hazırlanması
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: backend/managementService/package-lock.json
+
+      - name: Bağımlılıkların hazırlanması
+        run: npm ci
+
+  socket-service-ci:
+    name: Socket Service CI
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: backend/socketService
+
+    steps:
+      - name: Repository'den kodun alınması
+        uses: actions/checkout@v4
+
+      - name: Node.js ortamının hazırlanması
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: backend/socketService/package-lock.json
+
+      - name: Bağımlılıkların hazırlanması
+        run: npm ci
+
+      - name: Unit ve integration testlerinin çalıştırılması
+        run: npm test
 
   frontend-ci:
-    name: Frontend dependency ve unit test kontrolleri
+    name: Frontend CI
     runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: client
 
     steps:
       - name: Repository'den kodun alınması
@@ -66,12 +99,8 @@ jobs:
           cache: npm
           cache-dependency-path: client/package-lock.json
 
-      - name: Frontend bağımlılıklarının hazırlanması
-        run: |
-          cd client
-          npm ci
+      - name: Bağımlılıkların hazırlanması
+        run: npm ci
 
-      - name: Frontend unit testlerinin çalıştırılması
-        run: |
-          cd client
-          npm test
+      - name: Unit testlerinin çalıştırılması
+        run: npm test
