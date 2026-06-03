@@ -55,6 +55,9 @@ jobs:
       - name: Bağımlılıkların hazırlanması
         run: npm ci
 
+      - name: Unit ve integration testlerinin çalıştırılması
+        run: npm test
+
   socket-service-ci:
     name: Socket Service CI
     runs-on: ubuntu-latest
