@@ -1,0 +1,72 @@
+name: Develop CI Test Automation
+
+on:
+  push:
+    branches-ignore: [main]
+  pull_request:
+    branches-ignore: [main]
+  workflow_dispatch:
+
+jobs:
+  backend-ci:
+    name: Backend dependency ve unit test kontrolleri
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Repository'den kodun alınması
+        uses: actions/checkout@v4
+
+      - name: Node.js ortamının hazırlanması
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: |
+            backend/authService/package-lock.json
+            backend/managementService/package-lock.json
+            backend/socketService/package-lock.json
+
+      - name: authService bağımlılıklarının hazırlanması
+        run: |
+          cd backend/authService
+          npm ci
+
+      - name: managementService bağımlılıklarının hazırlanması
+        run: |
+          cd backend/managementService
+          npm ci
+
+      - name: socketService bağımlılıklarının hazırlanması
+        run: |
+          cd backend/socketService
+          npm ci
+
+      - name: socketService unit ve integration testlerinin çalıştırılması
+        run: |
+          cd backend/socketService
+          npm test
+
+  frontend-ci:
+    name: Frontend dependency ve unit test kontrolleri
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Repository'den kodun alınması
+        uses: actions/checkout@v4
+
+      - name: Node.js ortamının hazırlanması
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: client/package-lock.json
+
+      - name: Frontend bağımlılıklarının hazırlanması
+        run: |
+          cd client
+          npm ci
+
+      - name: Frontend unit testlerinin çalıştırılması
+        run: |
+          cd client
+          npm test
