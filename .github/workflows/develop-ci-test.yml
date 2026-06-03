@@ -31,6 +31,11 @@ jobs:
           cd backend/authService
           npm ci
 
+      - name: authService unit ve integration testlerinin çalıştırılması
+        run: |
+          cd backend/authService
+          npm test
+
       - name: managementService bağımlılıklarının hazırlanması
         run: |
           cd backend/managementService
