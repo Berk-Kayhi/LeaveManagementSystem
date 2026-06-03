@@ -2,7 +2,7 @@
 
 import { DateTime } from "luxon";
 import { describe, expect, test } from "vitest";
-import { formatLeaveItem, getLeaveColor } from "./leaveUtils";
+import { formatLeaveItem, getLeaveColor } from "../../utils/leaveUtils";
 
 describe("getLeaveColor", () => {
   test("theme amber ise amber renklerini döner", () => {
