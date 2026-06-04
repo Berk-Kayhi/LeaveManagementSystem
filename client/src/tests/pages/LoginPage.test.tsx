@@ -1,17 +1,17 @@
 import { fireEvent, render, waitFor } from "@testing-library/react";
-import { describe, expect, test, vi } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 import LoginPage from "../../pages/LoginPage";
 import { useAuth } from "../../context/authContext.tsx";
-import { useNavigation } from "../../hooks/useNavigation";
 import { authApi } from "../../services/api";
 import toast from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
 
 vi.mock("../../context/authContext.tsx", () => ({
   useAuth: vi.fn(),
 }));
 
-vi.mock("../../hooks/useNavigation", () => ({
-  useNavigation: vi.fn(),
+vi.mock("react-router-dom", () => ({
+  useNavigate: vi.fn(),
 }));
 
 vi.mock("../../services/api", () => ({
@@ -30,9 +30,13 @@ vi.mock("react-hot-toast", () => ({
 }));
 
 describe("LoginPage", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   test("kurulum kapalıysa giriş formunu gösterir", async () => {
     const login = vi.fn();
-    const forwardTo = vi.fn();
+    const navigate = vi.fn();
 
     vi.mocked(useAuth).mockReturnValue({
       user: null,
@@ -40,7 +44,7 @@ describe("LoginPage", () => {
       logout: vi.fn(),
       loading: false,
     });
-    vi.mocked(useNavigation).mockReturnValue({ forwardTo });
+    vi.mocked(useNavigate).mockReturnValue(navigate);
     vi.mocked(authApi.getBootstrapStatus).mockResolvedValue({ isOpen: false });
 
     const result = render(<LoginPage />);
@@ -53,7 +57,7 @@ describe("LoginPage", () => {
 
   test("giriş formu başarılı gönderilirse kullanıcıyı içeri alır", async () => {
     const login = vi.fn();
-    const forwardTo = vi.fn();
+    const navigate = vi.fn();
     const user = {
       id: "user-1",
       email: "employee@example.com",
@@ -68,7 +72,7 @@ describe("LoginPage", () => {
       logout: vi.fn(),
       loading: false,
     });
-    vi.mocked(useNavigation).mockReturnValue({ forwardTo });
+    vi.mocked(useNavigate).mockReturnValue(navigate);
     vi.mocked(authApi.getBootstrapStatus).mockResolvedValue({ isOpen: false });
     vi.mocked(authApi.login).mockResolvedValue({
       success: true,
@@ -94,13 +98,13 @@ describe("LoginPage", () => {
         isRememberMe: true,
       });
       expect(login).toHaveBeenCalledWith(user);
-      expect(forwardTo).toHaveBeenCalledWith("Ana sayfa", "/main");
+      expect(navigate).toHaveBeenCalledWith("/main");
     });
   });
 
   test("giriş formu boş gönderilirse hata mesajı verir", async () => {
     const login = vi.fn();
-    const forwardTo = vi.fn();
+    const navigate = vi.fn();
 
     vi.mocked(useAuth).mockReturnValue({
       user: null,
@@ -108,7 +112,7 @@ describe("LoginPage", () => {
       logout: vi.fn(),
       loading: false,
     });
-    vi.mocked(useNavigation).mockReturnValue({ forwardTo });
+    vi.mocked(useNavigate).mockReturnValue(navigate);
     vi.mocked(authApi.getBootstrapStatus).mockResolvedValue({ isOpen: false });
 
     const result = render(<LoginPage />);
@@ -123,7 +127,7 @@ describe("LoginPage", () => {
 
   test("ilk kurulum açıksa admin oluşturma formunu gösterir", async () => {
     const login = vi.fn();
-    const forwardTo = vi.fn();
+    const navigate = vi.fn();
 
     vi.mocked(useAuth).mockReturnValue({
       user: null,
@@ -131,7 +135,7 @@ describe("LoginPage", () => {
       logout: vi.fn(),
       loading: false,
     });
-    vi.mocked(useNavigation).mockReturnValue({ forwardTo });
+    vi.mocked(useNavigate).mockReturnValue(navigate);
     vi.mocked(authApi.getBootstrapStatus).mockResolvedValue({ isOpen: true });
 
     const result = render(<LoginPage />);
@@ -144,7 +148,7 @@ describe("LoginPage", () => {
 
   test("ilk admin formu başarılı gönderilirse admin oluşturur", async () => {
     const login = vi.fn();
-    const forwardTo = vi.fn();
+    const navigate = vi.fn();
     const user = {
       id: "admin-1",
       email: "admin@example.com",
@@ -159,7 +163,7 @@ describe("LoginPage", () => {
       logout: vi.fn(),
       loading: false,
     });
-    vi.mocked(useNavigation).mockReturnValue({ forwardTo });
+    vi.mocked(useNavigate).mockReturnValue(navigate);
     vi.mocked(authApi.getBootstrapStatus).mockResolvedValue({ isOpen: true });
     vi.mocked(authApi.registerFirstAdmin).mockResolvedValue({
       success: true,
@@ -192,7 +196,7 @@ describe("LoginPage", () => {
       });
       expect(login).toHaveBeenCalledWith(user);
       expect(toast.success).toHaveBeenCalledWith("İlk admin hesabı oluşturuldu.");
-      expect(forwardTo).toHaveBeenCalledWith("Ana sayfa", "/main");
+      expect(navigate).toHaveBeenCalledWith("/main");
     });
   });
 });
