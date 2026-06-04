@@ -1,0 +1,12 @@
+services:
+  client:
+    image: lms-client:ci
+
+  auth_service:
+    image: lms-auth-service:ci
+
+  management_service:
+    image: lms-management-service:ci
+
+  socket_service:
+    image: lms-socket-service:ci

@@ -108,14 +108,50 @@ jobs:
       - name: Unit testlerinin çalıştırılması
         run: npm test
 
-  selenium-lifecycle-ci:
-    name: Selenium Lifecycle CI
+      - name: Frontend build sürecinin çalıştırılması
+        run: npm run build
+
+  docker-image-build-ci:
+    name: Docker Image Build CI
     runs-on: ubuntu-latest
     needs:
       - auth-service-ci
       - management-service-ci
       - socket-service-ci
       - frontend-ci
+
+    steps:
+      - name: Repository'den kodun alınması
+        uses: actions/checkout@v4
+
+      - name: CI ortam değişkenlerinin hazırlanması
+        run: |
+          cp .env.example .env
+
+      - name: Docker image build adımlarının çalıştırılması
+        run: docker compose -f docker-compose.yml -f docker-compose.ci.yml build
+
+      - name: Docker image artifact'ının hazırlanması
+        run: |
+          docker save \
+            lms-client:ci \
+            lms-auth-service:ci \
+            lms-management-service:ci \
+            lms-socket-service:ci \
+            | gzip > docker-images.tar.gz
+
+      - name: Docker image artifact'ının yüklenmesi
+        uses: actions/upload-artifact@v4
+        with:
+          name: lms-docker-images
+          path: docker-images.tar.gz
+          retention-days: 1
+
+  selenium-lifecycle-ci:
+    name: Selenium Lifecycle CI
+    runs-on: ubuntu-latest
+    needs:
+      - docker-image-build-ci
 
     steps:
       - name: Repository'den kodun alınması
@@ -130,37 +166,21 @@ jobs:
 
       - name: CI ortam değişkenlerinin hazırlanması
         run: |
-          cat > .env <<'EOF'
-          JWT_SECRET=ci-test-secret
-          CLIENT_URL=http://localhost:5173
+          cp .env.example .env
 
-          POSTGRES_USER=ci_user
-          POSTGRES_PASSWORD=ci_password
-          POSTGRES_DB=LeaveManagementSystemDB
-          DB_HOST=postgres
-          DB_PORT=5432
+      - name: Docker image artifact'ının indirilmesi
+        uses: actions/download-artifact@v4
+        with:
+          name: lms-docker-images
 
-          MONGO_URI=mongodb://mongodb:27017/authDB
-
-          AUTH_PORT=1001
-          MANAGEMENT_PORT=1002
-          SOCKET_PORT=1003
-
-          AUTH_SERVICE_URL=http://auth_service:1001
-          SOCKET_SERVICE_URL=http://socket_service:1003
-          SOCKET_SERVICE_TOKEN=ci-socket-service-secret
-
-          VITE_API_DOMAIN=http://localhost
-          VITE_AUTH_SERVICE_PORT=1001
-          VITE_MANAGEMENT_SERVICE_PORT=1002
-          VITE_SOCKET_SERVICE_PORT=1003
-          EOF
+      - name: Docker image'larının yüklenmesi
+        run: gunzip -c docker-images.tar.gz | docker load
 
       - name: Uygulama ve veritabanlarının ayağa kaldırılması
-        run: docker compose up -d --build
+        run: docker compose -f docker-compose.yml -f docker-compose.ci.yml up -d --no-build
 
       - name: PostgreSQL migrationlarının çalıştırılması
-        run: docker compose exec -T management_service npx sequelize-cli db:migrate
+        run: docker compose -f docker-compose.yml -f docker-compose.ci.yml exec -T management_service npx sequelize-cli db:migrate
 
       - name: Uygulamanın hazır olmasının beklenmesi
         run: |
@@ -174,7 +194,7 @@ jobs:
 
       - name: Docker loglarının yüklenmesi
         if: failure()
-        run: docker compose logs --no-color > docker-compose-logs.txt
+        run: docker compose -f docker-compose.yml -f docker-compose.ci.yml logs --no-color > docker-compose-logs.txt
 
       - name: Hata loglarının artifact olarak yüklenmesi
         if: failure()
@@ -188,7 +208,7 @@ jobs:
 
       - name: Uygulama ortamının kapatılması
         if: always()
-        run: docker compose down -v
+        run: docker compose -f docker-compose.yml -f docker-compose.ci.yml down -v
 
   selenium-demo-data-ci:
     name: Selenium Demo Data CI
@@ -209,37 +229,21 @@ jobs:
 
       - name: CI ortam değişkenlerinin hazırlanması
         run: |
-          cat > .env <<'EOF'
-          JWT_SECRET=ci-test-secret
-          CLIENT_URL=http://localhost:5173
+          cp .env.example .env
 
-          POSTGRES_USER=ci_user
-          POSTGRES_PASSWORD=ci_password
-          POSTGRES_DB=LeaveManagementSystemDB
-          DB_HOST=postgres
-          DB_PORT=5432
+      - name: Docker image artifact'ının indirilmesi
+        uses: actions/download-artifact@v4
+        with:
+          name: lms-docker-images
 
-          MONGO_URI=mongodb://mongodb:27017/authDB
-
-          AUTH_PORT=1001
-          MANAGEMENT_PORT=1002
-          SOCKET_PORT=1003
-
-          AUTH_SERVICE_URL=http://auth_service:1001
-          SOCKET_SERVICE_URL=http://socket_service:1003
-          SOCKET_SERVICE_TOKEN=ci-socket-service-secret
-
-          VITE_API_DOMAIN=http://localhost
-          VITE_AUTH_SERVICE_PORT=1001
-          VITE_MANAGEMENT_SERVICE_PORT=1002
-          VITE_SOCKET_SERVICE_PORT=1003
-          EOF
+      - name: Docker image'larının yüklenmesi
+        run: gunzip -c docker-images.tar.gz | docker load
 
       - name: Uygulama ve veritabanlarının ayağa kaldırılması
-        run: docker compose up -d --build
+        run: docker compose -f docker-compose.yml -f docker-compose.ci.yml up -d --no-build
 
       - name: PostgreSQL migrationlarının çalıştırılması
-        run: docker compose exec -T management_service npx sequelize-cli db:migrate
+        run: docker compose -f docker-compose.yml -f docker-compose.ci.yml exec -T management_service npx sequelize-cli db:migrate
 
       - name: Uygulamanın hazır olmasının beklenmesi
         run: |
@@ -253,7 +257,7 @@ jobs:
 
       - name: Docker loglarının yüklenmesi
         if: failure()
-        run: docker compose logs --no-color > docker-compose-logs.txt
+        run: docker compose -f docker-compose.yml -f docker-compose.ci.yml logs --no-color > docker-compose-logs.txt
 
       - name: Hata loglarının artifact olarak yüklenmesi
         if: failure()
@@ -267,7 +271,7 @@ jobs:
 
       - name: Uygulama ortamının kapatılması
         if: always()
-        run: docker compose down -v
+        run: docker compose -f docker-compose.yml -f docker-compose.ci.yml down -v
 
   selenium-page-tour-ci:
     name: Selenium Page Tour CI
@@ -288,37 +292,21 @@ jobs:
 
       - name: CI ortam değişkenlerinin hazırlanması
         run: |
-          cat > .env <<'EOF'
-          JWT_SECRET=ci-test-secret
-          CLIENT_URL=http://localhost:5173
+          cp .env.example .env
 
-          POSTGRES_USER=ci_user
-          POSTGRES_PASSWORD=ci_password
-          POSTGRES_DB=LeaveManagementSystemDB
-          DB_HOST=postgres
-          DB_PORT=5432
+      - name: Docker image artifact'ının indirilmesi
+        uses: actions/download-artifact@v4
+        with:
+          name: lms-docker-images
 
-          MONGO_URI=mongodb://mongodb:27017/authDB
-
-          AUTH_PORT=1001
-          MANAGEMENT_PORT=1002
-          SOCKET_PORT=1003
-
-          AUTH_SERVICE_URL=http://auth_service:1001
-          SOCKET_SERVICE_URL=http://socket_service:1003
-          SOCKET_SERVICE_TOKEN=ci-socket-service-secret
-
-          VITE_API_DOMAIN=http://localhost
-          VITE_AUTH_SERVICE_PORT=1001
-          VITE_MANAGEMENT_SERVICE_PORT=1002
-          VITE_SOCKET_SERVICE_PORT=1003
-          EOF
+      - name: Docker image'larının yüklenmesi
+        run: gunzip -c docker-images.tar.gz | docker load
 
       - name: Uygulama ve veritabanlarının ayağa kaldırılması
-        run: docker compose up -d --build
+        run: docker compose -f docker-compose.yml -f docker-compose.ci.yml up -d --no-build
 
       - name: PostgreSQL migrationlarının çalıştırılması
-        run: docker compose exec -T management_service npx sequelize-cli db:migrate
+        run: docker compose -f docker-compose.yml -f docker-compose.ci.yml exec -T management_service npx sequelize-cli db:migrate
 
       - name: Uygulamanın hazır olmasının beklenmesi
         run: |
@@ -336,7 +324,7 @@ jobs:
 
       - name: Docker loglarının yüklenmesi
         if: failure()
-        run: docker compose logs --no-color > docker-compose-logs.txt
+        run: docker compose -f docker-compose.yml -f docker-compose.ci.yml logs --no-color > docker-compose-logs.txt
 
       - name: Hata loglarının artifact olarak yüklenmesi
         if: failure()
@@ -350,4 +338,4 @@ jobs:
 
       - name: Uygulama ortamının kapatılması
         if: always()
-        run: docker compose down -v
+        run: docker compose -f docker-compose.yml -f docker-compose.ci.yml down -v
