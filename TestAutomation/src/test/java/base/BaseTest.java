@@ -3,6 +3,7 @@ package base;
 import components.SidebarComponent;
 import data.MainData;
 import io.qameta.allure.Attachment;
+import org.openqa.selenium.Dimension;
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebDriver;
@@ -30,7 +31,7 @@ public class BaseTest extends MainData {
     @BeforeMethod(alwaysRun = true)
     public void beforeTest() {
         driver = new ChromeDriver();
-        driver.manage().window().maximize();
+        driver.manage().window().setSize(new Dimension(1440, 1000));
         wait = new WebDriverWait(driver, Duration.ofSeconds(15));
         driver.get(System.getProperty("app.url", URL));
         loginPage = new LoginPage(driver, wait);
