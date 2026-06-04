@@ -65,7 +65,7 @@ public class SidebarComponent extends BasePage {
     public SidebarComponent openNotificationPanel(){
         openNotificationPanelWithFallback();
         validateNotificationPanelOpenedOrEmpty();
-        waitForVisualTransition(500);
+        waitHalfSecond();
         takeScreenshot();
         return this;
     }

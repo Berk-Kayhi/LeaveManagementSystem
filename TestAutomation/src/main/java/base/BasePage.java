@@ -22,12 +22,15 @@ public class BasePage {
 
     protected void sendKeys (By locator, String data){
         waitForAppReady();
-        wait.until(ExpectedConditions.visibilityOfElementLocated(locator)).sendKeys(data);
+        WebElement element = wait.until(ExpectedConditions.visibilityOfElementLocated(locator));
+        waitHalfSecond();
+        element.sendKeys(data);
     }
 
     protected void clearAndSendKeys(By locator, String data){
         waitForAppReady();
         WebElement element = wait.until(ExpectedConditions.visibilityOfElementLocated(locator));
+        waitHalfSecond();
         element.clear();
         element.sendKeys(data);
     }
@@ -36,6 +39,7 @@ public class BasePage {
         waitForAppReady();
         WebElement element = wait.until(ExpectedConditions.elementToBeClickable(locator));
         ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView({block: 'center', inline: 'center'});", element);
+        waitHalfSecond();
         try {
             element.click();
         } catch (WebDriverException e) {
@@ -47,27 +51,31 @@ public class BasePage {
         waitForAppReady();
         WebElement element = wait.until(ExpectedConditions.elementToBeClickable(locator));
         ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView({block: 'center', inline: 'center'});", element);
+        waitHalfSecond();
         ((JavascriptExecutor) driver).executeScript("arguments[0].click();", element);
     }
 
     protected void validateUrlContains(String path) {
         wait.until(ExpectedConditions.urlContains(path));
         waitForAppReady();
+        waitHalfSecond();
     }
 
     protected void validateElementVisible(By locator) {
         waitForAppReady();
         wait.until(ExpectedConditions.visibilityOfElementLocated(locator));
+        waitHalfSecond();
     }
 
     protected void validateElementInvisible(By locator) {
         wait.until(ExpectedConditions.invisibilityOfElementLocated(locator));
         waitForAppReady();
+        waitHalfSecond();
     }
 
-    protected void waitForVisualTransition(int milliseconds) {
+    protected void waitHalfSecond() {
         try {
-            Thread.sleep(milliseconds);
+            Thread.sleep(500);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
@@ -76,6 +84,7 @@ public class BasePage {
     @Attachment(value = "Test Adımı Ekran Görüntüsü", type = "image/png")
     protected byte[] takeScreenshot() {
         waitForAppReady();
+        waitHalfSecond();
         return ((TakesScreenshot) driver).getScreenshotAs(OutputType.BYTES);
     }
 

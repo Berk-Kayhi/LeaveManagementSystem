@@ -36,6 +36,7 @@ services:
       context: ./backend/managementService
       dockerfile: Dockerfile
     container_name: management_service
+    command: sh -c "npx sequelize-cli db:migrate && npm run dev"
     ports:
       - "1002:1002"
     env_file:
