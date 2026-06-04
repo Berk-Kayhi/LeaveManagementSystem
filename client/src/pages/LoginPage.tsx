@@ -2,8 +2,8 @@ import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { KeyRound, Loader2, Mail, User, UserRoundPlus } from "lucide-react";
 import { useAuth } from "../context/authContext.tsx";
-import { useNavigation } from "../hooks/useNavigation";
 import { authApi } from "../services/api";
+import { useNavigate } from "react-router-dom";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
@@ -14,7 +14,7 @@ const LoginPage = () => {
   const [isSetupOpen, setSetupOpen] = useState(false);
   const [isCheckingSetup, setCheckingSetup] = useState(true);
   const [isSubmitting, setSubmitting] = useState(false);
-  const { forwardTo } = useNavigation();
+  const navigate = useNavigate();
   const { login } = useAuth();
 
   useEffect(() => {
@@ -52,7 +52,7 @@ const LoginPage = () => {
 
       if (data.success) {
         login(data.user);
-        forwardTo("Ana sayfa", "/main");
+        navigate("/main");
       } else {
         toast.error(data.message || "Giriş yapılamadı!");
       }
@@ -88,7 +88,7 @@ const LoginPage = () => {
         setSetupOpen(false);
         login(data.user);
         toast.success("İlk admin hesabı oluşturuldu.");
-        forwardTo("Ana sayfa", "/main");
+        navigate("/main");
       }
     } catch (error: unknown) {
       console.error("First Admin Register Error:", error);

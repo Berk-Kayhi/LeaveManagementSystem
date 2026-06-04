@@ -392,101 +392,122 @@ const NotificationSocket = () => {
             key="notification-backdrop"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="pointer-events-none fixed right-0 top-0 bottom-0 z-[100000] w-[min(560px,100vw)] bg-white/20 backdrop-blur-md [mask-image:linear-gradient(to_left,black_0%,black_70%,rgba(0,0,0,0.35)_88%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_left,black_0%,black_70%,rgba(0,0,0,0.35)_88%,transparent_100%)]"
+            exit={{ opacity: 0, x: 36 }}
+            transition={{ duration: 0.22, ease: "easeInOut" }}
+            className="pointer-events-none fixed right-0 top-0 bottom-0 z-[100000] w-[min(500px,100vw)] bg-gradient-to-l from-white/55 via-white/25 to-transparent backdrop-blur-[6px] [mask-image:linear-gradient(to_right,transparent_0%,rgba(0,0,0,0.22)_12%,rgba(0,0,0,0.72)_26%,black_40%)] [-webkit-mask-image:linear-gradient(to_right,transparent_0%,rgba(0,0,0,0.22)_12%,rgba(0,0,0,0.72)_26%,black_40%)]"
           />
         )}
       </AnimatePresence>
 
-      <div
-        ref={notificationPanelRef}
-        data-notification-panel-active={isPanelMode}
-        className="fixed right-4 top-4 z-[100001] flex w-[360px] max-w-[calc(100vw-24px)] flex-col gap-3"
-      >
-        <AnimatePresence mode="popLayout">
-          {notifications.map((notification) => (
-            <motion.div
-              key={notification.id}
-              initial={{ x: 100, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              exit={{ x: 100, opacity: 0 }}
-              transition={{
-                type: "spring",
-                stiffness: 400,
-                damping: 30,
-              }}
-              layout
-              role={notification.leaveId ? "button" : undefined}
-              tabIndex={notification.leaveId ? 0 : undefined}
-              onClick={() => openLeaveDetail(notification)}
-              onKeyDown={(event) => {
-                if (event.key === "Enter" || event.key === " ") {
-                  openLeaveDetail(notification);
-                }
-              }}
-              className="group cursor-pointer pointer-events-auto flex items-start gap-3 rounded-2xl border-2 border-gray-200 bg-white p-4 shadow-xl will-change-transform transition-colors duration-200 hover:bg-gray-200"
-            >
-              <div className="relative">
-                <img
-                  src={`https://api.dicebear.com/7.x/initials/svg?seed=${notification.actor?.firstName || notification.firstName || "Kullanıcı"}%${notification.actor?.lastName || notification.lastName || ""}`}
-                  alt={`${notification.actor?.firstName || notification.firstName || "Kullanıcı"} ${notification.actor?.lastName || notification.lastName || ""}`}
-                  className="h-11 w-11 shrink-0 rounded-xl border border-indigo-100 object-cover bg-indigo-50 shadow-sm"
-                />
-                <div className={`absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full shadow-sm ${notification.type === 'leave_created' ? 'bg-indigo-500' :
-                    notification.type === 'leave_approved' ? 'bg-emerald-500' :
-                      'bg-rose-500'
-                  }`}>
-                  {notification.type === 'leave_created' && <CalendarPlus className="h-2.5 w-2.5 text-white" />}
-                  {notification.type === 'leave_approved' && <Check className="h-2.5 w-2.5 text-white" />}
-                  {notification.type === 'leave_rejected' && <X className="h-2.5 w-2.5 text-white" />}
-                </div>
-              </div>
+      <AnimatePresence>
+        {notifications.length > 0 && (
+          <motion.div
+            key="notification-panel"
+            ref={notificationPanelRef}
+            data-notification-panel-active={isPanelMode}
+            initial={{ x: 96, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{
+              x: 132,
+              opacity: 0,
+              transition: { duration: 0.26, ease: "easeInOut" },
+            }}
+            transition={{ type: "spring", stiffness: 420, damping: 34 }}
+            className="no-scrollbar fixed right-1 top-1 z-[100001] flex max-h-[calc(100vh-0.5rem)] w-[384px] max-w-[calc(100vw-8px)] flex-col gap-3 overflow-y-auto overscroll-contain p-3"
+          >
+            <AnimatePresence mode="popLayout">
+              {notifications.map((notification) => (
+                <motion.div
+                  key={notification.id}
+                  initial={{ x: 100, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  exit={{
+                    x: 120,
+                    opacity: 0,
+                    transition: { duration: 0.24, ease: "easeInOut" },
+                  }}
+                  transition={{
+                    type: "spring",
+                    stiffness: 400,
+                    damping: 30,
+                  }}
+                  layout
+                  role={notification.leaveId ? "button" : undefined}
+                  tabIndex={notification.leaveId ? 0 : undefined}
+                  onClick={() => openLeaveDetail(notification)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      openLeaveDetail(notification);
+                    }
+                  }}
+                  className="group cursor-pointer pointer-events-auto flex items-start gap-3 rounded-2xl border-2 border-gray-200 bg-white p-4 shadow-xl will-change-transform transition-colors duration-200 hover:bg-gray-200"
+                >
+                  <div className="relative">
+                    <img
+                      src={`https://api.dicebear.com/7.x/initials/svg?seed=${notification.actor?.firstName || notification.firstName || "Kullanıcı"}%${notification.actor?.lastName || notification.lastName || ""}`}
+                      alt={`${notification.actor?.firstName || notification.firstName || "Kullanıcı"} ${notification.actor?.lastName || notification.lastName || ""}`}
+                      className="h-11 w-11 shrink-0 rounded-xl border border-indigo-100 object-cover bg-indigo-50 shadow-sm"
+                    />
+                    <div className={`absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full shadow-sm ${notification.type === 'leave_created' ? 'bg-indigo-500' :
+                        notification.type === 'leave_approved' ? 'bg-emerald-500' :
+                          'bg-rose-500'
+                      }`}>
+                      {notification.type === 'leave_created' && <CalendarPlus className="h-2.5 w-2.5 text-white" />}
+                      {notification.type === 'leave_approved' && <Check className="h-2.5 w-2.5 text-white" />}
+                      {notification.type === 'leave_rejected' && <X className="h-2.5 w-2.5 text-white" />}
+                    </div>
+                  </div>
 
-              <div className="min-w-0 flex-1">
-                <p className="mb-0.5 truncate text-sm font-bold text-gray-900">
-                  {notification.title}
-                </p>
-                <p className="text-sm leading-5 text-gray-600 line-clamp-2">
-                  {notification.message}
-                </p>
-              </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="mb-0.5 truncate text-sm font-bold text-gray-900">
+                      {notification.title}
+                    </p>
+                    <p className="text-sm leading-5 text-gray-600 line-clamp-2">
+                      {notification.message}
+                    </p>
+                  </div>
 
-            </motion.div>
-          ))}
-          {isPanelMode && notifications.length > 0 && (
-            <motion.div
-              key="clear-all-button"
-              initial={{ x: 100, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              exit={{ x: 100, opacity: 0 }}
-              transition={{
-                type: "spring",
-                stiffness: 400,
-                damping: 30,
-              }}
-              className="flex justify-center"
-            >
-              <motion.button
-                whileHover={{
-                  backgroundColor: "#dc2626",
-                  color: "#ffffff",
-                  borderColor: "#dc2626",
-                  transition: { duration: 0.2 }
-                }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleClearAll();
-                }}
-                className="group pointer-events-auto flex items-center justify-center gap-1.5 rounded-lg border-2 border-red-100 bg-red-50 px-4 py-1.5 text-xs font-bold text-red-600 active:scale-95 shadow-md shadow-red-900/5 will-change-transform"
-              >
-                <Trash2 size={14} className="transition-transform group-hover:scale-110" />
-                Tümünü Sil
-              </motion.button>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
+                </motion.div>
+              ))}
+              {isPanelMode && notifications.length > 0 && (
+                <motion.div
+                  key="clear-all-button"
+                  initial={{ x: 100, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  exit={{
+                    x: 120,
+                    opacity: 0,
+                    transition: { duration: 0.24, ease: "easeInOut" },
+                  }}
+                  transition={{
+                    type: "spring",
+                    stiffness: 400,
+                    damping: 30,
+                  }}
+                  className="flex justify-center"
+                >
+                  <motion.button
+                    whileHover={{
+                      backgroundColor: "#dc2626",
+                      color: "#ffffff",
+                      borderColor: "#dc2626",
+                      transition: { duration: 0.2 }
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleClearAll();
+                    }}
+                    className="group pointer-events-auto flex items-center justify-center gap-1.5 rounded-lg border-2 border-red-100 bg-red-50 px-4 py-1.5 text-xs font-bold text-red-600 active:scale-95 shadow-md shadow-red-900/5 will-change-transform"
+                  >
+                    <Trash2 size={14} className="transition-transform group-hover:scale-110" />
+                    Tümünü Sil
+                  </motion.button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <LeaveDetailPopup
         isOpen={!!selectedLeave}

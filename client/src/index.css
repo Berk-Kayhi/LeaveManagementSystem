@@ -37,3 +37,12 @@
   border-radius: 12px !important;
   overflow: hidden !important;
 }
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}

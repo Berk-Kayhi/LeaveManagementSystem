@@ -1,5 +1,5 @@
 import { ArrowRightFromLine } from "lucide-react";
-import { useNavigation } from "../hooks/useNavigation";
+import { useNavigate } from "react-router-dom";
 
 interface ViewAllButtonProps {
   label: string;
@@ -8,16 +8,15 @@ interface ViewAllButtonProps {
 }
 
 const ViewAllButton = ({
-  label,
   path,
   buttonText = "Tümünü Görüntüle",
 }: ViewAllButtonProps) => {
-  const { forwardTo } = useNavigation();
+  const navigate = useNavigate();
 
   return (
     <div className="mt-4 flex justify-end">
       <button
-        onClick={() => forwardTo(label, path)}
+        onClick={() => navigate(path)}
         className="text-blue-600 truncate hover:text-blue-700 cursor-pointer text-sm font-medium flex items-center gap-1"
       >
         {buttonText}

@@ -1,4 +1,11 @@
-import { FileText, Send, Users, CalendarDays, History, ChevronDown } from "lucide-react";
+import {
+  FileText,
+  Send,
+  Users,
+  CalendarDays,
+  History,
+  ChevronDown,
+} from "lucide-react";
 import { DateTime } from "luxon";
 import { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
@@ -297,7 +304,7 @@ const LeaveRequestPage = () => {
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="flex flex-col flex-1 gap-4 pt-6 border-t border-gray-100 min-h-0"
+                className=""
               >
                 <div className="flex items-center gap-2 mb-3 px-1">
                   <Users className="w-7 h-7 text-emerald-500" />
