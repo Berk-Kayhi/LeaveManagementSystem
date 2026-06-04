@@ -1,0 +1,109 @@
+name: Develop CI Test Automation
+
+on:
+  push:
+    branches-ignore: [main]
+  pull_request:
+    branches-ignore: [main]
+  workflow_dispatch:
+
+jobs:
+  auth-service-ci:
+    name: Auth Service CI
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: backend/authService
+
+    steps:
+      - name: Repository'den kodun alınması
+        uses: actions/checkout@v4
+
+      - name: Node.js ortamının hazırlanması
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: backend/authService/package-lock.json
+
+      - name: Bağımlılıkların hazırlanması
+        run: npm ci
+
+      - name: Unit ve integration testlerinin çalıştırılması
+        run: npm test
+
+  management-service-ci:
+    name: Management Service CI
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: backend/managementService
+
+    steps:
+      - name: Repository'den kodun alınması
+        uses: actions/checkout@v4
+
+      - name: Node.js ortamının hazırlanması
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: backend/managementService/package-lock.json
+
+      - name: Bağımlılıkların hazırlanması
+        run: npm ci
+
+      - name: Unit ve integration testlerinin çalıştırılması
+        run: npm test
+
+  socket-service-ci:
+    name: Socket Service CI
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: backend/socketService
+
+    steps:
+      - name: Repository'den kodun alınması
+        uses: actions/checkout@v4
+
+      - name: Node.js ortamının hazırlanması
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: backend/socketService/package-lock.json
+
+      - name: Bağımlılıkların hazırlanması
+        run: npm ci
+
+      - name: Unit ve integration testlerinin çalıştırılması
+        run: npm test
+
+  frontend-ci:
+    name: Frontend CI
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: client
+
+    steps:
+      - name: Repository'den kodun alınması
+        uses: actions/checkout@v4
+
+      - name: Node.js ortamının hazırlanması
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: client/package-lock.json
+
+      - name: Bağımlılıkların hazırlanması
+        run: npm ci
+
+      - name: Unit testlerinin çalıştırılması
+        run: npm test
