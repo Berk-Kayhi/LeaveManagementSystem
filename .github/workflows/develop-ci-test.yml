@@ -2,9 +2,9 @@ name: Develop CI Test Automation
 
 on:
   push:
-    branches-ignore: [main]
+    branches: [develop]
   pull_request:
-    branches-ignore: [main]
+    branches: [develop]
   workflow_dispatch:
 
 jobs:
