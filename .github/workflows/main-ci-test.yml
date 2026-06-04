@@ -1,0 +1,353 @@
+name: Main CI Test Automation
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  auth-service-ci:
+    name: Auth Service CI
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: backend/authService
+
+    steps:
+      - name: Repository'den kodun alınması
+        uses: actions/checkout@v4
+
+      - name: Node.js ortamının hazırlanması
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: backend/authService/package-lock.json
+
+      - name: Bağımlılıkların hazırlanması
+        run: npm ci
+
+      - name: Unit ve integration testlerinin çalıştırılması
+        run: npm test
+
+  management-service-ci:
+    name: Management Service CI
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: backend/managementService
+
+    steps:
+      - name: Repository'den kodun alınması
+        uses: actions/checkout@v4
+
+      - name: Node.js ortamının hazırlanması
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: backend/managementService/package-lock.json
+
+      - name: Bağımlılıkların hazırlanması
+        run: npm ci
+
+      - name: Unit ve integration testlerinin çalıştırılması
+        run: npm test
+
+  socket-service-ci:
+    name: Socket Service CI
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: backend/socketService
+
+    steps:
+      - name: Repository'den kodun alınması
+        uses: actions/checkout@v4
+
+      - name: Node.js ortamının hazırlanması
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: backend/socketService/package-lock.json
+
+      - name: Bağımlılıkların hazırlanması
+        run: npm ci
+
+      - name: Unit ve integration testlerinin çalıştırılması
+        run: npm test
+
+  frontend-ci:
+    name: Frontend CI
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: client
+
+    steps:
+      - name: Repository'den kodun alınması
+        uses: actions/checkout@v4
+
+      - name: Node.js ortamının hazırlanması
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: client/package-lock.json
+
+      - name: Bağımlılıkların hazırlanması
+        run: npm ci
+
+      - name: Unit testlerinin çalıştırılması
+        run: npm test
+
+  selenium-lifecycle-ci:
+    name: Selenium Lifecycle CI
+    runs-on: ubuntu-latest
+    needs:
+      - auth-service-ci
+      - management-service-ci
+      - socket-service-ci
+      - frontend-ci
+
+    steps:
+      - name: Repository'den kodun alınması
+        uses: actions/checkout@v4
+
+      - name: Java ortamının hazırlanması
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: maven
+
+      - name: CI ortam değişkenlerinin hazırlanması
+        run: |
+          cat > .env <<'EOF'
+          JWT_SECRET=ci-test-secret
+          CLIENT_URL=http://localhost:5173
+
+          POSTGRES_USER=ci_user
+          POSTGRES_PASSWORD=ci_password
+          POSTGRES_DB=LeaveManagementSystemDB
+          DB_HOST=postgres
+          DB_PORT=5432
+
+          MONGO_URI=mongodb://mongodb:27017/authDB
+
+          AUTH_PORT=1001
+          MANAGEMENT_PORT=1002
+          SOCKET_PORT=1003
+
+          AUTH_SERVICE_URL=http://auth_service:1001
+          SOCKET_SERVICE_URL=http://socket_service:1003
+          SOCKET_SERVICE_TOKEN=ci-socket-service-secret
+
+          VITE_API_DOMAIN=http://localhost
+          VITE_AUTH_SERVICE_PORT=1001
+          VITE_MANAGEMENT_SERVICE_PORT=1002
+          VITE_SOCKET_SERVICE_PORT=1003
+          EOF
+
+      - name: Uygulama ve veritabanlarının ayağa kaldırılması
+        run: docker compose up -d --build
+
+      - name: PostgreSQL migrationlarının çalıştırılması
+        run: docker compose exec -T management_service npx sequelize-cli db:migrate
+
+      - name: Uygulamanın hazır olmasının beklenmesi
+        run: |
+          timeout 120 bash -c 'until curl -fsS http://localhost:5173 >/dev/null; do sleep 2; done'
+          timeout 120 bash -c 'until curl -fsS http://localhost:1001/api/auth/bootstrap/status >/dev/null; do sleep 2; done'
+          timeout 120 bash -c 'until curl -fsS http://localhost:1003/health >/dev/null; do sleep 2; done'
+
+      - name: Selenium lifecycle testinin çalıştırılması
+        working-directory: TestAutomation
+        run: xvfb-run -a mvn -q -Dtest=tests.PositiveRoleBasedLeaveLifecycleTest test
+
+      - name: Docker loglarının yüklenmesi
+        if: failure()
+        run: docker compose logs --no-color > docker-compose-logs.txt
+
+      - name: Hata loglarının artifact olarak yüklenmesi
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: selenium-lifecycle-failure-logs
+          path: |
+            docker-compose-logs.txt
+            TestAutomation/target/surefire-reports/
+            TestAutomation/target/allure-results/
+
+      - name: Uygulama ortamının kapatılması
+        if: always()
+        run: docker compose down -v
+
+  selenium-demo-data-ci:
+    name: Selenium Demo Data CI
+    runs-on: ubuntu-latest
+    needs:
+      - selenium-lifecycle-ci
+
+    steps:
+      - name: Repository'den kodun alınması
+        uses: actions/checkout@v4
+
+      - name: Java ortamının hazırlanması
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: maven
+
+      - name: CI ortam değişkenlerinin hazırlanması
+        run: |
+          cat > .env <<'EOF'
+          JWT_SECRET=ci-test-secret
+          CLIENT_URL=http://localhost:5173
+
+          POSTGRES_USER=ci_user
+          POSTGRES_PASSWORD=ci_password
+          POSTGRES_DB=LeaveManagementSystemDB
+          DB_HOST=postgres
+          DB_PORT=5432
+
+          MONGO_URI=mongodb://mongodb:27017/authDB
+
+          AUTH_PORT=1001
+          MANAGEMENT_PORT=1002
+          SOCKET_PORT=1003
+
+          AUTH_SERVICE_URL=http://auth_service:1001
+          SOCKET_SERVICE_URL=http://socket_service:1003
+          SOCKET_SERVICE_TOKEN=ci-socket-service-secret
+
+          VITE_API_DOMAIN=http://localhost
+          VITE_AUTH_SERVICE_PORT=1001
+          VITE_MANAGEMENT_SERVICE_PORT=1002
+          VITE_SOCKET_SERVICE_PORT=1003
+          EOF
+
+      - name: Uygulama ve veritabanlarının ayağa kaldırılması
+        run: docker compose up -d --build
+
+      - name: PostgreSQL migrationlarının çalıştırılması
+        run: docker compose exec -T management_service npx sequelize-cli db:migrate
+
+      - name: Uygulamanın hazır olmasının beklenmesi
+        run: |
+          timeout 120 bash -c 'until curl -fsS http://localhost:5173 >/dev/null; do sleep 2; done'
+          timeout 120 bash -c 'until curl -fsS http://localhost:1001/api/auth/bootstrap/status >/dev/null; do sleep 2; done'
+          timeout 120 bash -c 'until curl -fsS http://localhost:1003/health >/dev/null; do sleep 2; done'
+
+      - name: Selenium demo data testinin çalıştırılması
+        working-directory: TestAutomation
+        run: xvfb-run -a mvn -q -Dtest=tests.PositiveDemoDataSetupTest test
+
+      - name: Docker loglarının yüklenmesi
+        if: failure()
+        run: docker compose logs --no-color > docker-compose-logs.txt
+
+      - name: Hata loglarının artifact olarak yüklenmesi
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: selenium-demo-data-failure-logs
+          path: |
+            docker-compose-logs.txt
+            TestAutomation/target/surefire-reports/
+            TestAutomation/target/allure-results/
+
+      - name: Uygulama ortamının kapatılması
+        if: always()
+        run: docker compose down -v
+
+  selenium-page-tour-ci:
+    name: Selenium Page Tour CI
+    runs-on: ubuntu-latest
+    needs:
+      - selenium-demo-data-ci
+
+    steps:
+      - name: Repository'den kodun alınması
+        uses: actions/checkout@v4
+
+      - name: Java ortamının hazırlanması
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: maven
+
+      - name: CI ortam değişkenlerinin hazırlanması
+        run: |
+          cat > .env <<'EOF'
+          JWT_SECRET=ci-test-secret
+          CLIENT_URL=http://localhost:5173
+
+          POSTGRES_USER=ci_user
+          POSTGRES_PASSWORD=ci_password
+          POSTGRES_DB=LeaveManagementSystemDB
+          DB_HOST=postgres
+          DB_PORT=5432
+
+          MONGO_URI=mongodb://mongodb:27017/authDB
+
+          AUTH_PORT=1001
+          MANAGEMENT_PORT=1002
+          SOCKET_PORT=1003
+
+          AUTH_SERVICE_URL=http://auth_service:1001
+          SOCKET_SERVICE_URL=http://socket_service:1003
+          SOCKET_SERVICE_TOKEN=ci-socket-service-secret
+
+          VITE_API_DOMAIN=http://localhost
+          VITE_AUTH_SERVICE_PORT=1001
+          VITE_MANAGEMENT_SERVICE_PORT=1002
+          VITE_SOCKET_SERVICE_PORT=1003
+          EOF
+
+      - name: Uygulama ve veritabanlarının ayağa kaldırılması
+        run: docker compose up -d --build
+
+      - name: PostgreSQL migrationlarının çalıştırılması
+        run: docker compose exec -T management_service npx sequelize-cli db:migrate
+
+      - name: Uygulamanın hazır olmasının beklenmesi
+        run: |
+          timeout 120 bash -c 'until curl -fsS http://localhost:5173 >/dev/null; do sleep 2; done'
+          timeout 120 bash -c 'until curl -fsS http://localhost:1001/api/auth/bootstrap/status >/dev/null; do sleep 2; done'
+          timeout 120 bash -c 'until curl -fsS http://localhost:1003/health >/dev/null; do sleep 2; done'
+
+      - name: Page tour için demo datanın hazırlanması
+        working-directory: TestAutomation
+        run: xvfb-run -a mvn -q -Dtest=tests.PositiveDemoDataSetupTest test
+
+      - name: Selenium page tour testinin çalıştırılması
+        working-directory: TestAutomation
+        run: xvfb-run -a mvn -q -Dtest=tests.PositiveRoleBasedPageTourTest test
+
+      - name: Docker loglarının yüklenmesi
+        if: failure()
+        run: docker compose logs --no-color > docker-compose-logs.txt
+
+      - name: Hata loglarının artifact olarak yüklenmesi
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: selenium-page-tour-failure-logs
+          path: |
+            docker-compose-logs.txt
+            TestAutomation/target/surefire-reports/
+            TestAutomation/target/allure-results/
+
+      - name: Uygulama ortamının kapatılması
+        if: always()
+        run: docker compose down -v
