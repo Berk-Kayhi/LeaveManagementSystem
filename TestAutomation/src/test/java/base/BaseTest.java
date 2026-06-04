@@ -6,7 +6,7 @@ import io.qameta.allure.Attachment;
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.safari.SafariDriver;
+import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
@@ -29,10 +29,10 @@ public class BaseTest extends MainData {
 
     @BeforeMethod(alwaysRun = true)
     public void beforeTest() {
-        driver = new SafariDriver();
+        driver = new ChromeDriver();
         driver.manage().window().maximize();
         wait = new WebDriverWait(driver, Duration.ofSeconds(15));
-        driver.get(URL);
+        driver.get(System.getProperty("app.url", URL));
         loginPage = new LoginPage(driver, wait);
         sidebarComponent = new SidebarComponent(driver, wait);
         adminManagementPage = new AdminManagementPage(driver, wait);
