@@ -199,9 +199,9 @@ Main workflow aşamaları:
 1. Auth, management ve socket servislerinde `npm ci` + `npm test`
 2. Frontend için `npm ci`, `npm test` ve `npm run build`
 3. Docker image build ve `lms-docker-images` artifact üretimi
-4. Docker Compose üzerinde Selenium lifecycle, demo data ve page tour testleri
+4. Tek Docker Compose ortamı üzerinde Selenium lifecycle, demo data ve page tour testleri
 5. Self-hosted runner üzerinde Docker Desktop Kubernetes deployment
-6. Kubernetes port-forward smoke testleri: client, auth bootstrap endpoint'i ve socket health endpoint'i
+6. Kubernetes NodePort smoke testleri: client, auth bootstrap endpoint'i ve socket health endpoint'i
 7. Hata durumunda Docker logları, Surefire/Allure çıktıları ve Kubernetes diagnostics artifact'ları
 
 CI ortamında Docker image'ları şu tag'lerle hazırlanır:
