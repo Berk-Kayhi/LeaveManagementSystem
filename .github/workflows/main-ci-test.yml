@@ -382,6 +382,7 @@ jobs:
           kubectl rollout status deployment/client -n leave-management --timeout=180s
 
       - name: Kubernetes servis smoke testlerinin çalıştırılması
+        timeout-minutes: 3
         run: |
           kubectl port-forward -n leave-management service/client 5173:5173 >/tmp/client-port-forward.log 2>&1 &
           CLIENT_PORT_FORWARD_PID=$!
@@ -391,9 +392,9 @@ jobs:
           SOCKET_PORT_FORWARD_PID=$!
           trap 'kill "$CLIENT_PORT_FORWARD_PID" "$AUTH_PORT_FORWARD_PID" "$SOCKET_PORT_FORWARD_PID" 2>/dev/null || true' EXIT
 
-          timeout 120 bash -c 'until curl -fsS http://localhost:5173 >/dev/null; do sleep 2; done'
-          timeout 120 bash -c 'until curl -fsS http://localhost:1001/api/auth/bootstrap/status >/dev/null; do sleep 2; done'
-          timeout 120 bash -c 'until curl -fsS http://localhost:1003/health >/dev/null; do sleep 2; done'
+          until curl -fsS http://localhost:5173 >/dev/null; do sleep 2; done
+          until curl -fsS http://localhost:1001/api/auth/bootstrap/status >/dev/null; do sleep 2; done
+          until curl -fsS http://localhost:1003/health >/dev/null; do sleep 2; done
 
       - name: Kubernetes hata tanılarının hazırlanması
         if: failure()
