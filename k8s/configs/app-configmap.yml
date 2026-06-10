@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-configmap
+  namespace: leave-management
+data:
+  NODE_ENV: "development"
+
+  CLIENT_URL: "http://localhost:30080"
+
+  AUTH_SERVICE_URL: "http://auth-service:1001"
+  SOCKET_SERVICE_URL: "http://socket-service:1003"
+
+  AUTH_PORT: "1001"
+  MANAGEMENT_PORT: "1002"
+  SOCKET_PORT: "1003"
+
+  MONGO_URI: "mongodb://mongodb:27017/leave_management"
+  POSTGRES_USER: "leave_user"
+  POSTGRES_DB: "leave_management"
+  DB_HOST: "postgres"
+  DB_PORT: "5432"
+
+  VITE_API_DOMAIN: "http://localhost"
+  VITE_AUTH_SERVICE_PORT: "31001"
+  VITE_MANAGEMENT_SERVICE_PORT: "31002"
+  VITE_SOCKET_SERVICE_PORT: "31003"

@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth-service
+  namespace: leave-management
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: auth-service
+  template:
+    metadata:
+      labels:
+        app: auth-service
+    spec:
+      initContainers:
+        - name: wait-for-mongodb
+          image: mongo:latest
+          command:
+            - sh
+            - -c
+          args:
+            - until mongosh --host mongodb --eval "db.adminCommand('ping')" >/dev/null 2>&1; do sleep 2; done
+      containers:
+        - name: auth-service
+          image: lms-auth-service:ci
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 1001
+          envFrom:
+            - configMapRef:
+                name: app-configmap
+            - secretRef:
+                name: app-secret
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth-service
+  namespace: leave-management
+spec:
+  type: NodePort
+  selector:
+    app: auth-service
+  ports:
+    - port: 1001
+      targetPort: 1001
+      nodePort: 31001
