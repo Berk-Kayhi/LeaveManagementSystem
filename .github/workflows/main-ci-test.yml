@@ -146,6 +146,7 @@ jobs:
           name: lms-docker-images
           path: docker-images.tar.gz
           retention-days: 1
+          compression-level: 0
 
   selenium-lifecycle-ci:
     name: Selenium Lifecycle CI
@@ -174,7 +175,7 @@ jobs:
           name: lms-docker-images
 
       - name: Docker image'larının yüklenmesi
-        run: gunzip -c docker-images.tar.gz | docker load
+        run: docker load -i docker-images.tar.gz
 
       - name: Uygulama ve veritabanlarının ayağa kaldırılması
         run: docker compose -f docker-compose.yml -f docker-compose.ci.yml up -d --no-build
@@ -234,7 +235,7 @@ jobs:
           name: lms-docker-images
 
       - name: Docker image'larının yüklenmesi
-        run: gunzip -c docker-images.tar.gz | docker load
+        run: docker load -i docker-images.tar.gz
 
       - name: Uygulama ve veritabanlarının ayağa kaldırılması
         run: docker compose -f docker-compose.yml -f docker-compose.ci.yml up -d --no-build
@@ -294,7 +295,7 @@ jobs:
           name: lms-docker-images
 
       - name: Docker image'larının yüklenmesi
-        run: gunzip -c docker-images.tar.gz | docker load
+        run: docker load -i docker-images.tar.gz
 
       - name: Uygulama ve veritabanlarının ayağa kaldırılması
         run: docker compose -f docker-compose.yml -f docker-compose.ci.yml up -d --no-build
@@ -347,7 +348,7 @@ jobs:
           name: lms-docker-images
 
       - name: Docker image'larının yüklenmesi
-        run: gunzip -c docker-images.tar.gz | docker load
+        run: docker load -i docker-images.tar.gz
 
       - name: Docker Desktop Kubernetes context'inin seçilmesi
         run: |
