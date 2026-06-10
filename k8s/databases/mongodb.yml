@@ -4,6 +4,7 @@ metadata:
   name: mongodb
   namespace: leave-management
 spec:
+  clusterIP: None
   selector:
     app: mongodb
   ports:
@@ -17,7 +18,7 @@ metadata:
   namespace: leave-management
 spec:
   serviceName: mongodb
-  replicas: 1
+  replicas: 3
   selector:
     matchLabels:
       app: mongodb
@@ -29,8 +30,23 @@ spec:
       containers:
         - name: mongodb
           image: mongo:latest
+          command:
+            - mongod
+            - --replSet
+            - rs0
+            - --bind_ip_all
           ports:
             - containerPort: 27017
+          readinessProbe:
+            exec:
+              command:
+                - mongosh
+                - --eval
+                - db.adminCommand('ping')
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 5
+            failureThreshold: 12
           volumeMounts:
             - name: mongodb-data
               mountPath: /data/db

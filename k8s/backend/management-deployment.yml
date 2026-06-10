@@ -4,7 +4,7 @@ metadata:
   name: management-service
   namespace: leave-management
 spec:
-  replicas: 2
+  replicas: 3
   selector:
     matchLabels:
       app: management-service

@@ -1,0 +1,52 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: mongodb-replica-init
+  namespace: leave-management
+spec:
+  backoffLimit: 6
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: mongodb-replica-init
+          image: mongo:latest
+          command:
+            - sh
+            - -c
+          args:
+            - |
+              until mongosh --host mongodb-0.mongodb --eval "db.adminCommand('ping')" >/dev/null 2>&1; do sleep 2; done
+              until mongosh --host mongodb-1.mongodb --eval "db.adminCommand('ping')" >/dev/null 2>&1; do sleep 2; done
+              until mongosh --host mongodb-2.mongodb --eval "db.adminCommand('ping')" >/dev/null 2>&1; do sleep 2; done
+
+              mongosh --host mongodb-0.mongodb --eval '
+                const config = {
+                  _id: "rs0",
+                  members: [
+                    { _id: 0, host: "mongodb-0.mongodb:27017" },
+                    { _id: 1, host: "mongodb-1.mongodb:27017" },
+                    { _id: 2, host: "mongodb-2.mongodb:27017" }
+                  ]
+                };
+
+                try {
+                  rs.status();
+                } catch (error) {
+                  rs.initiate(config);
+                }
+
+                let hasPrimary = false;
+                for (let i = 0; i < 60; i++) {
+                  const status = rs.status();
+                  hasPrimary = status.members.some((member) => member.stateStr === "PRIMARY");
+                  if (hasPrimary) {
+                    break;
+                  }
+                  sleep(1000);
+                }
+
+                if (!hasPrimary) {
+                  throw new Error("MongoDB replica set primary was not elected");
+                }
+              '

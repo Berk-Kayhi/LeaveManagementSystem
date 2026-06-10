@@ -221,9 +221,9 @@ Kapsam:
 
 - `ConfigMap`: servis portları, servis URL'leri, MongoDB/PostgreSQL bağlantı ayarları ve Vite değişkenleri
 - `Secret`: `JWT_SECRET`, `SOCKET_SERVICE_TOKEN` ve PostgreSQL parolası
-- `StatefulSet`: MongoDB ve PostgreSQL kalıcı veritabanları
-- `Deployment`: client, auth, management ve socket servisleri
-- `Job`: management service Sequelize migration adımı
+- `StatefulSet`: 3 podlu MongoDB replica set ve tek podlu PostgreSQL kalıcı veritabanları
+- `Deployment`: 3 replica client, auth, management ve socket servisleri
+- `Job`: MongoDB replica set başlatma ve management service Sequelize migration adımları
 - `NodePort`: client `30080`, auth `31001`, management `31002`, socket `31003`
 
 Yerelde Docker Desktop Kubernetes kullanırken önce CI tag'li image'ları hazırlayın:
@@ -237,9 +237,15 @@ Ardından manifestleri uygulayın:
 ```bash
 kubectl apply -f k8s/namespace.yml
 kubectl apply -f k8s/configs/
-kubectl apply -f k8s/databases/
+kubectl apply -f k8s/databases/postgres.yml
+kubectl delete service mongodb -n leave-management --ignore-not-found
+kubectl apply -f k8s/databases/mongodb.yml
 kubectl rollout status statefulset/postgres -n leave-management --timeout=180s
 kubectl rollout status statefulset/mongodb -n leave-management --timeout=180s
+
+kubectl delete job mongodb-replica-init -n leave-management --ignore-not-found
+kubectl apply -f k8s/databases/mongodb-replica-init-job.yml
+kubectl wait --for=condition=complete job/mongodb-replica-init -n leave-management --timeout=180s
 
 kubectl delete job management-migration -n leave-management --ignore-not-found
 kubectl apply -f k8s/backend/management-migration-job.yml
