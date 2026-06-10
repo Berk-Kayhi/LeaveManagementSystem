@@ -68,7 +68,7 @@ public class BasePage {
     }
 
     protected void validateElementInvisible(By locator) {
-        wait.until(ExpectedConditions.invisibilityOfElementLocated(locator));
+        waitUntilInvisible(locator);
         waitForAppReady();
         waitHalfSecond();
     }
@@ -89,11 +89,27 @@ public class BasePage {
     }
 
     protected void waitForAppReady() {
-        wait.until(webDriver -> ((JavascriptExecutor) webDriver)
-                .executeScript("return document.readyState").equals("complete"));
-        wait.until(ExpectedConditions.invisibilityOfElementLocated(By.cssSelector("[data-testid='page-loader']")));
-        wait.until(ExpectedConditions.invisibilityOfElementLocated(By.xpath("//*[normalize-space()='Veriler hazırlanıyor...']")));
-        wait.until(ExpectedConditions.invisibilityOfElementLocated(By.xpath("//*[normalize-space()='Kaydediliyor...']")));
+        wait.until(webDriver -> {
+            try {
+                return ((JavascriptExecutor) webDriver)
+                        .executeScript("return document.readyState").equals("complete");
+            } catch (WebDriverException e) {
+                return false;
+            }
+        });
+        waitUntilInvisible(By.cssSelector("[data-testid='page-loader']"));
+        waitUntilInvisible(By.xpath("//*[normalize-space()='Veriler hazırlanıyor...']"));
+        waitUntilInvisible(By.xpath("//*[normalize-space()='Kaydediliyor...']"));
+    }
+
+    private void waitUntilInvisible(By locator) {
+        wait.until(webDriver -> {
+            try {
+                return webDriver.findElements(locator).stream().noneMatch(WebElement::isDisplayed);
+            } catch (WebDriverException e) {
+                return false;
+            }
+        });
     }
 
 }
