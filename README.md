@@ -243,7 +243,7 @@ export PATH="$HOME/.linkerd2/bin:$PATH"
 kubectl apply --server-side -f https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.4.0/standard-install.yaml
 linkerd check --pre
 linkerd install --crds | kubectl apply -f -
-linkerd install | kubectl apply -f -
+linkerd install --set proxyInit.runAsRoot=true | kubectl apply -f -
 linkerd check
 ```
 

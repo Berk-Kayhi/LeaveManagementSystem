@@ -247,12 +247,13 @@ jobs:
           echo "$HOME/.linkerd2/bin" >> "$GITHUB_PATH"
 
       - name: Linkerd control plane kurulumu
+        timeout-minutes: 5
         run: |
           kubectl apply --server-side -f https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.4.0/standard-install.yaml
           linkerd check --pre
           linkerd install --crds | kubectl apply -f -
-          linkerd install | kubectl apply -f -
-          timeout 300 linkerd check
+          linkerd install --set proxyInit.runAsRoot=true | kubectl apply -f -
+          linkerd check
 
       - name: Kubernetes manifestlerinin uygulanması
         run: |
