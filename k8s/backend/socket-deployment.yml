@@ -42,10 +42,8 @@ metadata:
   name: socket-service
   namespace: leave-management
 spec:
-  type: NodePort
   selector:
     app: socket-service
   ports:
     - port: 1003
       targetPort: 1003
-      nodePort: 31003

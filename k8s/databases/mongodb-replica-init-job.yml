@@ -32,8 +32,14 @@ spec:
 
                 try {
                   rs.status();
-                } catch (error) {
-                  rs.initiate(config);
+                } catch (statusError) {
+                  try {
+                    rs.initiate(config);
+                  } catch (initError) {
+                    if (!String(initError).includes("already initialized")) {
+                      throw initError;
+                    }
+                  }
                 }
 
                 let hasPrimary = false;

@@ -54,10 +54,8 @@ metadata:
   name: management-service
   namespace: leave-management
 spec:
-  type: NodePort
   selector:
     app: management-service
   ports:
     - port: 1002
       targetPort: 1002
-      nodePort: 31002

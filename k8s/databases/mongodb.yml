@@ -5,6 +5,7 @@ metadata:
   namespace: leave-management
 spec:
   clusterIP: None
+  publishNotReadyAddresses: true
   selector:
     app: mongodb
   ports:

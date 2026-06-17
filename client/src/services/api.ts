@@ -3,9 +3,14 @@ const AUTH_PORT = import.meta.env.VITE_AUTH_SERVICE_PORT;
 const MANAGEMENT_PORT = import.meta.env.VITE_MANAGEMENT_SERVICE_PORT;
 const SOCKET_PORT = import.meta.env.VITE_SOCKET_SERVICE_PORT;
 
-const AUTH_BASE_URL = `${API_DOMAIN}:${AUTH_PORT}/api/auth`;
-const API_BASE_URL = `${API_DOMAIN}:${MANAGEMENT_PORT}/api`;
-const SOCKET_BASE_URL = `${API_DOMAIN}:${SOCKET_PORT}/api`;
+const createBaseUrl = (port?: string) => {
+  if (!API_DOMAIN) return "";
+  return `${API_DOMAIN}${port ? `:${port}` : ""}`;
+};
+
+const AUTH_BASE_URL = `${createBaseUrl(AUTH_PORT)}/api/auth`;
+const API_BASE_URL = `${createBaseUrl(MANAGEMENT_PORT)}/api`;
+const SOCKET_BASE_URL = `${createBaseUrl(SOCKET_PORT)}/api`;
 
 interface RequestOptions extends RequestInit {
   token?: string | null;

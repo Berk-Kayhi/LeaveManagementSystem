@@ -183,8 +183,8 @@ jobs:
       - name: Uygulamanın hazır olmasının beklenmesi
         run: |
           timeout 120 bash -c 'until curl -fsS http://localhost:5173 >/dev/null; do sleep 2; done'
-          timeout 120 bash -c 'until curl -fsS http://localhost:1001/api/auth/bootstrap/status >/dev/null; do sleep 2; done'
-          timeout 120 bash -c 'until curl -fsS http://localhost:1003/health >/dev/null; do sleep 2; done'
+          timeout 120 bash -c 'until curl -fsS http://localhost:5173/health >/dev/null; do sleep 2; done'
+          timeout 120 bash -c 'until curl -fsS http://localhost:5173/api/auth/bootstrap/status >/dev/null; do sleep 2; done'
 
       - name: Selenium lifecycle testinin çalıştırılması
         working-directory: TestAutomation
@@ -275,8 +275,8 @@ jobs:
         timeout-minutes: 3
         run: |
           until curl -fsS http://localhost:30080 >/dev/null; do sleep 2; done
-          until curl -fsS http://localhost:31001/api/auth/bootstrap/status >/dev/null; do sleep 2; done
-          until curl -fsS http://localhost:31003/health >/dev/null; do sleep 2; done
+          until curl -fsS http://localhost:30080/health >/dev/null; do sleep 2; done
+          until curl -fsS http://localhost:30080/api/auth/bootstrap/status >/dev/null; do sleep 2; done
 
       - name: Kubernetes hata tanılarının hazırlanması
         if: failure()

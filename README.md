@@ -16,7 +16,7 @@ Bu repo yalnızca uygulama kodunu değil; admin, takım lideri ve çalışan rol
 
 ## Teknolojiler
 
-- İstemci: React, Vite, TypeScript, Tailwind CSS, FullCalendar, Recharts, Socket.IO Client
+- İstemci: React, Vite, TypeScript, Tailwind CSS, FullCalendar, Recharts, Socket.IO Client, Nginx
 - Kimlik servisi: Node.js, Express, MongoDB, JWT
 - Yönetim servisi: Node.js, Express, PostgreSQL, Sequelize
 - Bildirim servisi: Node.js, Express, MongoDB, Socket.IO
@@ -48,7 +48,7 @@ Uygulama servisleri birbirinden ayrılmıştır:
 - `authService`: giriş, çıkış, cookie tabanlı JWT doğrulama, ilk admin oluşturma ve kullanıcı yönetimi endpoint'lerini sağlar.
 - `managementService`: izin taleplerini, takım verilerini, onay/red akışlarını ve PostgreSQL modellerini yönetir.
 - `socketService`: kalıcı bildirim kayıtlarını ve gerçek zamanlı Socket.IO event'lerini yönetir.
-- `client`: servis adreslerini `VITE_*` ortam değişkenlerinden alır ve cookie'leri `credentials: "include"` ile servisler arasında taşır.
+- `client`: React uygulamasını build eder, Nginx ile statik olarak servis eder ve `/api` ile `/socket.io` isteklerini internal backend servislerine proxy'ler. Docker dışı Vite geliştirme modunda `VITE_*` değişkenleriyle backend portlarına doğrudan bağlanabilir.
 
 Yönetim servisi Docker Compose ortamında başlamadan önce `npx sequelize-cli db:migrate` komutunu çalıştırır. Kubernetes ortamında migration işlemi ayrı bir `management-migration` Job'u ile uygulanır.
 
@@ -68,12 +68,11 @@ Ardından uygulamayı Docker Compose ile başlatın:
 docker compose up --build
 ```
 
-Servisler varsayılan olarak şu adreslerde çalışır:
+Docker Compose ortamında dışarıya yalnızca istemci açılır:
 
 - İstemci: `http://localhost:5173`
-- Auth Service: `http://localhost:1001`
-- Management Service: `http://localhost:1002`
-- Socket Service: `http://localhost:1003`
+
+Auth, management, socket ve veritabanı servisleri Docker network içinde kalır. Frontend container'ındaki Nginx, `/api/auth`, `/api`, `/api/notifications` ve `/socket.io` isteklerini ilgili backend servislerine yönlendirir.
 
 Verileri sıfırdan başlatmak için container'ları volume'lerle birlikte kapatabilirsiniz:
 
@@ -201,7 +200,7 @@ Main workflow aşamaları:
 3. Docker image build ve `lms-docker-images` artifact üretimi
 4. Tek Docker Compose ortamı üzerinde Selenium lifecycle, demo data ve page tour testleri
 5. Self-hosted runner üzerinde Docker Desktop Kubernetes deployment
-6. Kubernetes NodePort smoke testleri: client, auth bootstrap endpoint'i ve socket health endpoint'i
+6. Kubernetes smoke testleri: client ve frontend üzerinden auth bootstrap endpoint'i
 7. Hata durumunda Docker logları, Surefire/Allure çıktıları ve Kubernetes diagnostics artifact'ları
 
 CI ortamında Docker image'ları şu tag'lerle hazırlanır:
@@ -219,12 +218,12 @@ Kubernetes manifestleri [`k8s`](k8s) klasöründedir ve varsayılan namespace `l
 
 Kapsam:
 
-- `ConfigMap`: servis portları, servis URL'leri, MongoDB/PostgreSQL bağlantı ayarları ve Vite değişkenleri
+- `ConfigMap`: servis portları, internal servis URL'leri ve MongoDB/PostgreSQL bağlantı ayarları
 - `Secret`: `JWT_SECRET`, `SOCKET_SERVICE_TOKEN` ve PostgreSQL parolası
 - `StatefulSet`: 3 podlu MongoDB replica set ve tek podlu PostgreSQL kalıcı veritabanları
 - `Deployment`: 3 replica client, auth, management ve socket servisleri
 - `Job`: MongoDB replica set başlatma ve management service Sequelize migration adımları
-- `NodePort`: client `30080`, auth `31001`, management `31002`, socket `31003`
+- `NodePort`: yalnızca client `30080`; backend servisleri cluster içinde `ClusterIP` olarak kalır
 
 Yerelde Docker Desktop Kubernetes kullanırken önce CI tag'li image'ları hazırlayın:
 
@@ -263,12 +262,11 @@ Durum kontrolü:
 kubectl get all,pvc -n leave-management
 ```
 
-NodePort adresleri:
+NodePort adresi:
 
 - Client: `http://localhost:30080`
-- Auth Service: `http://localhost:31001`
-- Management Service: `http://localhost:31002`
-- Socket Service: `http://localhost:31003`
+
+Backend servislerine dışarıdan doğrudan erişim açılmaz; istekler client servisindeki Nginx proxy üzerinden yönlendirilir.
 
 Kubernetes secret dosyalarındaki örnek değerler canlı ortamda kullanılmadan önce değiştirilmelidir.
 
