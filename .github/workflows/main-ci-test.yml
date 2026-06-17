@@ -240,6 +240,20 @@ jobs:
           kubectl cluster-info
           kubectl get nodes
 
+      - name: Linkerd CLI kurulumu
+        run: |
+          export LINKERD2_VERSION=edge-26.6.2
+          curl --proto '=https' --tlsv1.2 -sSfL https://run.linkerd.io/install-edge | sh
+          echo "$HOME/.linkerd2/bin" >> "$GITHUB_PATH"
+
+      - name: Linkerd control plane kurulumu
+        run: |
+          kubectl apply --server-side -f https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.4.0/standard-install.yaml
+          linkerd check --pre
+          linkerd install --crds | kubectl apply -f -
+          linkerd install | kubectl apply -f -
+          timeout 300 linkerd check
+
       - name: Kubernetes manifestlerinin uygulanması
         run: |
           kubectl apply -f k8s/namespace.yml
@@ -271,6 +285,9 @@ jobs:
           kubectl rollout status deployment/socket-service -n leave-management --timeout=180s
           kubectl rollout status deployment/client -n leave-management --timeout=180s
 
+      - name: Linkerd proxy durumunun doğrulanması
+        run: linkerd -n leave-management check --proxy
+
       - name: Kubernetes servis smoke testlerinin çalıştırılması
         timeout-minutes: 3
         run: |
@@ -290,6 +307,8 @@ jobs:
           kubectl logs -n leave-management -l app=management-service --all-containers=true --tail=-1 > k8s-diagnostics/management-service.log || true
           kubectl logs -n leave-management -l app=socket-service --all-containers=true --tail=-1 > k8s-diagnostics/socket-service.log || true
           kubectl logs -n leave-management -l app=client --all-containers=true --tail=-1 > k8s-diagnostics/client.log || true
+          linkerd check > k8s-diagnostics/linkerd-check.txt 2>&1 || true
+          kubectl get all -n linkerd -o wide > k8s-diagnostics/linkerd-resources.txt || true
 
       - name: Kubernetes hata artifact'larının yüklenmesi
         if: failure()

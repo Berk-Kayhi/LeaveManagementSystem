@@ -10,6 +10,8 @@ spec:
       app: auth-service
   template:
     metadata:
+      annotations:
+        linkerd.io/inject: enabled
       labels:
         app: auth-service
     spec:

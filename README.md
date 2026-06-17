@@ -199,9 +199,10 @@ Main workflow aşamaları:
 2. Frontend için `npm ci`, `npm test` ve `npm run build`
 3. Docker image build ve `lms-docker-images` artifact üretimi
 4. Tek Docker Compose ortamı üzerinde Selenium lifecycle, demo data ve page tour testleri
-5. Self-hosted runner üzerinde Docker Desktop Kubernetes deployment
-6. Kubernetes smoke testleri: client ve frontend üzerinden auth bootstrap endpoint'i
-7. Hata durumunda Docker logları, Surefire/Allure çıktıları ve Kubernetes diagnostics artifact'ları
+5. Self-hosted runner üzerinde Linkerd control plane kurulumu
+6. Docker Desktop Kubernetes deployment
+7. Kubernetes smoke testleri: client ve frontend üzerinden auth bootstrap endpoint'i
+8. Hata durumunda Docker logları, Surefire/Allure, Linkerd ve Kubernetes diagnostics artifact'ları
 
 CI ortamında Docker image'ları şu tag'lerle hazırlanır:
 
@@ -224,11 +225,26 @@ Kapsam:
 - `Deployment`: 3 replica client, auth, management ve socket servisleri
 - `Job`: MongoDB replica set başlatma ve management service Sequelize migration adımları
 - `NodePort`: yalnızca client `30080`; backend servisleri cluster içinde `ClusterIP` olarak kalır
+- `Linkerd`: client, auth, management ve socket deployment pod'ları otomatik sidecar injection ile meshe dahil edilir
 
 Yerelde Docker Desktop Kubernetes kullanırken önce CI tag'li image'ları hazırlayın:
 
 ```bash
 docker compose -f docker-compose.yml -f docker-compose.ci.yml build
+```
+
+Linkerd CLI ve control plane'i kurun:
+
+```bash
+export LINKERD2_VERSION=edge-26.6.2
+curl --proto '=https' --tlsv1.2 -sSfL https://run.linkerd.io/install-edge | sh
+export PATH="$HOME/.linkerd2/bin:$PATH"
+
+kubectl apply --server-side -f https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.4.0/standard-install.yaml
+linkerd check --pre
+linkerd install --crds | kubectl apply -f -
+linkerd install | kubectl apply -f -
+linkerd check
 ```
 
 Ardından manifestleri uygulayın:
@@ -260,6 +276,7 @@ Durum kontrolü:
 
 ```bash
 kubectl get all,pvc -n leave-management
+linkerd -n leave-management check --proxy
 ```
 
 NodePort adresi:

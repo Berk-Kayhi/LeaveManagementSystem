@@ -10,6 +10,8 @@ spec:
       app: socket-service
   template:
     metadata:
+      annotations:
+        linkerd.io/inject: enabled
       labels:
         app: socket-service
     spec:
