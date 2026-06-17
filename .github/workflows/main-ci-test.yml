@@ -250,7 +250,9 @@ jobs:
         timeout-minutes: 5
         run: |
           kubectl apply --server-side -f https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.4.0/standard-install.yaml
-          linkerd check --pre
+          if ! kubectl get namespace linkerd >/dev/null 2>&1; then
+            linkerd check --pre
+          fi
           linkerd install --crds | kubectl apply -f -
           linkerd install --set proxyInit.runAsRoot=true | kubectl apply -f -
           linkerd check
