@@ -20,7 +20,8 @@ spec:
           image: lms-client:ci
           imagePullPolicy: Never
           ports:
-            - containerPort: 80
+            - name: http
+              containerPort: 80
           envFrom:
             - configMapRef:
                 name: app-configmap
@@ -35,6 +36,8 @@ spec:
   selector:
     app: client
   ports:
-    - port: 80
+    - name: http
+      port: 80
       targetPort: 80
       nodePort: 30080
+      appProtocol: http

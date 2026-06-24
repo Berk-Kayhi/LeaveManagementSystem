@@ -31,7 +31,8 @@ spec:
           image: lms-auth-service:ci
           imagePullPolicy: Never
           ports:
-            - containerPort: 1001
+            - name: http
+              containerPort: 1001
           envFrom:
             - configMapRef:
                 name: app-configmap
@@ -47,5 +48,7 @@ spec:
   selector:
     app: auth-service
   ports:
-    - port: 1001
+    - name: http
+      port: 1001
       targetPort: 1001
+      appProtocol: http

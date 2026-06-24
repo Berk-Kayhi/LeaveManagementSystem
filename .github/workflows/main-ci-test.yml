@@ -234,6 +234,11 @@ jobs:
       - name: Docker image'larının yüklenmesi
         run: docker load -i docker-images.tar.gz
 
+      - name: Kubectl CLI kurulumu
+        uses: azure/setup-kubectl@v4
+        with:
+          version: latest
+
       - name: Docker Desktop Kubernetes context'inin seçilmesi
         run: |
           kubectl config use-context docker-desktop

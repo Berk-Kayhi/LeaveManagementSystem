@@ -62,7 +62,7 @@ exports.createUser = async (req, res) => {
     );
     res.status(201).json({ success: true, data: user });
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    res.status(400).json({ success: false, message: error.message });
   }
 };
 
@@ -70,7 +70,7 @@ exports.login = async (req, res) => {
   try {
     const { email, password, isRememberMe } = req.body;
     if (!email || !password) {
-      return res.status(400).json({ message: "Email ve şifre gereklidir" });
+      return res.status(400).json({ success: false, message: "Email ve şifre gereklidir" });
     }
 
     const result = await authService.loginUser(email, password, isRememberMe);
@@ -83,7 +83,7 @@ exports.login = async (req, res) => {
       token: result.token,
     });
   } catch (error) {
-    res.status(401).json({ message: error.message });
+    res.status(401).json({ success: false, message: error.message });
   }
 };
 

@@ -31,7 +31,8 @@ spec:
           image: lms-socket-service:ci
           imagePullPolicy: Never
           ports:
-            - containerPort: 1003
+            - name: http
+              containerPort: 1003
           envFrom:
             - configMapRef:
                 name: app-configmap
@@ -47,5 +48,7 @@ spec:
   selector:
     app: socket-service
   ports:
-    - port: 1003
+    - name: http
+      port: 1003
       targetPort: 1003
+      appProtocol: http

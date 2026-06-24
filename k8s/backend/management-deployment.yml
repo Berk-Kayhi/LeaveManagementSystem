@@ -37,7 +37,8 @@ spec:
           image: lms-management-service:ci
           imagePullPolicy: Never
           ports:
-            - containerPort: 1002
+            - name: http
+              containerPort: 1002
           envFrom:
             - configMapRef:
                 name: app-configmap
@@ -59,5 +60,7 @@ spec:
   selector:
     app: management-service
   ports:
-    - port: 1002
+    - name: http
+      port: 1002
       targetPort: 1002
+      appProtocol: http
