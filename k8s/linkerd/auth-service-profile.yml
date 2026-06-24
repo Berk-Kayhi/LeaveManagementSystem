@@ -1,0 +1,22 @@
+apiVersion: linkerd.io/v1alpha2
+kind: ServiceProfile
+metadata:
+  name: auth-service.leave-management.svc.cluster.local
+  namespace: leave-management
+spec:
+  routes:
+    - name: POST /api/auth/login
+      condition:
+        method: POST
+        pathRegex: ^/api/auth/login$
+      responseClasses:
+        - condition:
+            status:
+              min: 401
+              max: 401
+          isFailure: true
+        - condition:
+            status:
+              min: 500
+              max: 599
+          isFailure: true

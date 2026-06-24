@@ -265,10 +265,17 @@ jobs:
           fi
           linkerd check
 
+      - name: Linkerd viz extension kurulumu
+        timeout-minutes: 3
+        run: |
+          linkerd viz install | kubectl apply -f -
+          linkerd viz check
+
       - name: Kubernetes manifestlerinin uygulanması
         run: |
           kubectl apply -f k8s/namespace.yml
           kubectl apply -f k8s/configs/
+          kubectl apply -f k8s/linkerd/
           kubectl apply -f k8s/databases/postgres.yml
           kubectl delete service mongodb -n leave-management --ignore-not-found
           kubectl apply -f k8s/databases/mongodb.yml

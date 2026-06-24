@@ -12,7 +12,7 @@ Bu repo yalnızca uygulama kodunu değil; admin, takım lideri ve çalışan rol
 - İzin lifecycle akışı: talep oluşturma, onaylama, reddetme, geçmiş ve takvim görünümü
 - Anlık bildirim altyapısı: Socket.IO ile kullanıcı bazlı bildirim odaları
 - Kapsamlı test piramidi: Jest, Vitest, Selenium WebDriver, TestNG ve Allure raporları
-- Container ve deployment desteği: Docker Compose, CI image artifact'ları ve Kubernetes manifestleri
+- Container, service mesh ve deployment desteği: Docker Compose, CI image artifact'ları, Kubernetes manifestleri ve Linkerd
 
 ## Teknolojiler
 
@@ -23,7 +23,7 @@ Bu repo yalnızca uygulama kodunu değil; admin, takım lideri ve çalışan rol
 - Frontend testleri: Vitest, Testing Library, jsdom
 - Backend testleri: Jest, Supertest
 - UI test otomasyonu: Selenium WebDriver, ChromeDriver, TestNG, Maven, Allure
-- Çalıştırma ve deployment: Docker, Docker Compose, Kubernetes, GitHub Actions
+- Çalıştırma ve deployment: Docker, Docker Compose, Kubernetes, Linkerd, GitHub Actions
 
 ## Proje Yapısı
 
@@ -33,7 +33,7 @@ backend/authService/            Kimlik doğrulama, bootstrap ve kullanıcı yön
 backend/managementService/      Takım, izin ve PostgreSQL migration yönetimi
 backend/socketService/          Bildirim API'si ve Socket.IO bağlantısı
 TestAutomation/                 Selenium/TestNG tabanlı UI test otomasyonu
-k8s/                            Kubernetes namespace, config, secret, deployment ve statefulset dosyaları
+k8s/                            Kubernetes namespace, config, secret, deployment, statefulset ve Linkerd dosyaları
 .github/workflows/              Develop/Main CI, Docker image build, Selenium ve Kubernetes akışları
 docker-compose.yml              Yerel Docker Compose ortamı
 docker-compose.ci.yml           CI image override dosyası
@@ -48,7 +48,7 @@ Uygulama servisleri birbirinden ayrılmıştır:
 - `authService`: giriş, çıkış, cookie tabanlı JWT doğrulama, ilk admin oluşturma ve kullanıcı yönetimi endpoint'lerini sağlar.
 - `managementService`: izin taleplerini, takım verilerini, onay/red akışlarını ve PostgreSQL modellerini yönetir.
 - `socketService`: kalıcı bildirim kayıtlarını ve gerçek zamanlı Socket.IO event'lerini yönetir.
-- `client`: React uygulamasını build eder, Nginx ile statik olarak servis eder ve `/api` ile `/socket.io` isteklerini internal backend servislerine proxy'ler. Docker dışı Vite geliştirme modunda `VITE_*` değişkenleriyle backend portlarına doğrudan bağlanabilir.
+- `client`: React uygulamasını build eder, Nginx ile statik olarak servis eder ve `/api` ile `/socket.io` isteklerini internal backend servislerine proxy'ler. Kubernetes ortamında upstream `Host` header'ı servis adını koruyacak şekilde ayarlanır; böylece Linkerd route ve tap verileri doğru servis authority'siyle eşleşir. Docker dışı Vite geliştirme modunda `VITE_*` değişkenleriyle backend portlarına doğrudan bağlanabilir.
 
 Yönetim servisi Docker Compose ortamında başlamadan önce `npx sequelize-cli db:migrate` komutunu çalıştırır. Kubernetes ortamında migration işlemi ayrı bir `management-migration` Job'u ile uygulanır.
 
@@ -199,8 +199,8 @@ Main workflow aşamaları:
 2. Frontend için `npm ci`, `npm test` ve `npm run build`
 3. Docker image build ve `lms-docker-images` artifact üretimi
 4. Tek Docker Compose ortamı üzerinde Selenium lifecycle, demo data ve page tour testleri
-5. Self-hosted runner üzerinde Linkerd control plane kurulumu
-6. Docker Desktop Kubernetes deployment
+5. Self-hosted runner üzerinde `kubectl`, Linkerd control plane ve Linkerd Viz kurulumu
+6. Docker Desktop Kubernetes deployment ve Linkerd ServiceProfile manifestleri
 7. Kubernetes smoke testleri: client ve frontend üzerinden auth bootstrap endpoint'i
 8. Hata durumunda Docker logları, Surefire/Allure, Linkerd ve Kubernetes diagnostics artifact'ları
 
@@ -226,6 +226,7 @@ Kapsam:
 - `Job`: MongoDB replica set başlatma ve management service Sequelize migration adımları
 - `NodePort`: yalnızca client `30080`; backend servisleri cluster içinde `ClusterIP` olarak kalır
 - `Linkerd`: client, auth, management ve socket deployment pod'ları otomatik sidecar injection ile meshe dahil edilir
+- `ServiceProfile`: `auth-service` için `POST /api/auth/login` rotası tanımlanır; `401` login hataları Linkerd route metriklerinde failure olarak izlenebilir
 
 Yerelde Docker Desktop Kubernetes kullanırken önce CI tag'li image'ları hazırlayın:
 
@@ -252,11 +253,19 @@ fi
 linkerd check
 ```
 
+Linkerd Viz extension'ını kurun:
+
+```bash
+linkerd viz install | kubectl apply -f -
+linkerd viz check
+```
+
 Ardından manifestleri uygulayın:
 
 ```bash
 kubectl apply -f k8s/namespace.yml
 kubectl apply -f k8s/configs/
+kubectl apply -f k8s/linkerd/
 kubectl apply -f k8s/databases/postgres.yml
 kubectl delete service mongodb -n leave-management --ignore-not-found
 kubectl apply -f k8s/databases/mongodb.yml
@@ -275,6 +284,11 @@ kubectl apply -f k8s/backend/auth-deployment.yml
 kubectl apply -f k8s/backend/management-deployment.yml
 kubectl apply -f k8s/backend/socket-deployment.yml
 kubectl apply -f k8s/client/
+
+kubectl rollout restart deployment/auth-service -n leave-management
+kubectl rollout restart deployment/management-service -n leave-management
+kubectl rollout restart deployment/socket-service -n leave-management
+kubectl rollout restart deployment/client -n leave-management
 ```
 
 Durum kontrolü:
@@ -282,6 +296,8 @@ Durum kontrolü:
 ```bash
 kubectl get all,pvc -n leave-management
 linkerd -n leave-management check --proxy
+linkerd viz stat deploy -n leave-management
+linkerd viz routes svc/auth-service -n leave-management
 ```
 
 NodePort adresi:
